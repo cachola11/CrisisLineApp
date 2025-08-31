@@ -1,0 +1,597 @@
+[debug] [2025-08-31T22:31:12.298Z] ----------------------------------------------------------------------
+[debug] [2025-08-31T22:31:12.300Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\User\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2025-08-31T22:31:12.300Z] CLI Version:   14.15.1
+[debug] [2025-08-31T22:31:12.301Z] Platform:      win32
+[debug] [2025-08-31T22:31:12.301Z] Node Version:  v22.16.0
+[debug] [2025-08-31T22:31:12.301Z] Time:          Sun Aug 31 2025 23:31:12 GMT+0100 (Hora de verão da Europa Ocidental)
+[debug] [2025-08-31T22:31:12.301Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-31T22:31:12.482Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-08-31T22:31:12.482Z] > authorizing via signed-in user (iagorafael12.is@gmail.com)
+[debug] [2025-08-31T22:31:12.482Z] [iam] checking project crisislineapp for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-08-31T22:31:12.483Z] Checked if tokens are valid: false, expires at: 1756680304698
+[debug] [2025-08-31T22:31:12.483Z] Checked if tokens are valid: false, expires at: 1756680304698
+[debug] [2025-08-31T22:31:12.483Z] > refreshing access token with scopes: []
+[debug] [2025-08-31T22:31:12.485Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-31T22:31:12.485Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-31T22:31:12.656Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-31T22:31:12.657Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-31T22:31:12.662Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions [none]
+[debug] [2025-08-31T22:31:12.662Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions x-goog-quota-user=projects/crisislineapp
+[debug] [2025-08-31T22:31:12.662Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-08-31T22:31:13.330Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions 200
+[debug] [2025-08-31T22:31:13.330Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-08-31T22:31:13.331Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:31:13.331Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:31:13.331Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp [none]
+[debug] [2025-08-31T22:31:13.627Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp 200
+[debug] [2025-08-31T22:31:13.627Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp {"projectId":"crisislineapp","projectNumber":"1022052681225","displayName":"CrisisLineApp","name":"projects/crisislineapp","resources":{"hostingSite":"crisislineapp"},"state":"ACTIVE","etag":"1_083090b8-258f-4750-9d8e-3cb204ccaeb7"}
+[info] 
+[info] === Deploying to 'crisislineapp'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-08-31T22:31:13.632Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:31:13.632Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:31:13.632Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions [none]
+[debug] [2025-08-31T22:31:13.632Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-08-31T22:31:14.686Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions 200
+[debug] [2025-08-31T22:31:14.687Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions {"name":"projects/1022052681225/sites/crisislineapp/versions/fab452015c6d0563","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[crisislineapp]: beginning deploy... 
+[info] i  hosting[crisislineapp]: found 37 files in crisis-line-web/build 
+[debug] [2025-08-31T22:31:14.703Z] [hosting] uploading with 200 concurrency
+[debug] [2025-08-31T22:31:14.704Z] [hosting] hash cache [Y3Jpc2lzLWxpbmUtd2ViXGJ1aWxk] not populated
+[debug] [2025-08-31T22:31:14.741Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.742Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.742Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.742Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.743Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.743Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.743Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.744Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.744Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.744Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.745Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.745Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.746Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.746Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.746Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.747Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.747Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.747Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.748Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.748Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.748Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.748Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.749Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.749Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.749Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.750Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.750Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.750Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.751Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.751Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.751Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.751Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.752Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.752Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.753Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.753Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:14.753Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:21.477Z] ----------------------------------------------------------------------
+[debug] [2025-08-31T22:31:21.480Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\User\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting --debug
+[debug] [2025-08-31T22:31:21.480Z] CLI Version:   14.15.1
+[debug] [2025-08-31T22:31:21.480Z] Platform:      win32
+[debug] [2025-08-31T22:31:21.480Z] Node Version:  v22.16.0
+[debug] [2025-08-31T22:31:21.481Z] Time:          Sun Aug 31 2025 23:31:21 GMT+0100 (Hora de verão da Europa Ocidental)
+[debug] [2025-08-31T22:31:21.481Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-31T22:31:21.667Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-08-31T22:31:21.668Z] > authorizing via signed-in user (iagorafael12.is@gmail.com)
+[debug] [2025-08-31T22:31:21.668Z] [iam] checking project crisislineapp for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-08-31T22:31:21.669Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:31:21.669Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:31:21.670Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions [none]
+[debug] [2025-08-31T22:31:21.670Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions x-goog-quota-user=projects/crisislineapp
+[debug] [2025-08-31T22:31:21.670Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-08-31T22:31:22.401Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions 200
+[debug] [2025-08-31T22:31:22.401Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-08-31T22:31:22.402Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:31:22.402Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:31:22.402Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp [none]
+[debug] [2025-08-31T22:31:22.687Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp 200
+[debug] [2025-08-31T22:31:22.688Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp {"projectId":"crisislineapp","projectNumber":"1022052681225","displayName":"CrisisLineApp","name":"projects/crisislineapp","resources":{"hostingSite":"crisislineapp"},"state":"ACTIVE","etag":"1_083090b8-258f-4750-9d8e-3cb204ccaeb7"}
+[info] 
+[info] === Deploying to 'crisislineapp'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-08-31T22:31:22.692Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:31:22.692Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:31:22.692Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions [none]
+[debug] [2025-08-31T22:31:22.692Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-08-31T22:31:23.656Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions 200
+[debug] [2025-08-31T22:31:23.657Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions {"name":"projects/1022052681225/sites/crisislineapp/versions/8451d37eb90f8a96","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[crisislineapp]: beginning deploy... 
+[info] i  hosting[crisislineapp]: found 37 files in crisis-line-web/build 
+[debug] [2025-08-31T22:31:23.671Z] [hosting] uploading with 200 concurrency
+[debug] [2025-08-31T22:31:23.672Z] [hosting] hash cache [Y3Jpc2lzLWxpbmUtd2ViXGJ1aWxk] not populated
+[debug] [2025-08-31T22:31:23.705Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.706Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.706Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.707Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.707Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.707Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.708Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.708Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.708Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.709Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.709Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.709Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.710Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.710Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.711Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.711Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.711Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.712Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.712Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.712Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.713Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.713Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.714Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.714Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.714Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.715Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.715Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.716Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.716Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.716Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.717Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.717Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.718Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.718Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.718Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.719Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:31:23.719Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:38:59.960Z] ----------------------------------------------------------------------
+[debug] [2025-08-31T22:38:59.963Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\User\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2025-08-31T22:38:59.963Z] CLI Version:   14.15.1
+[debug] [2025-08-31T22:38:59.963Z] Platform:      win32
+[debug] [2025-08-31T22:38:59.963Z] Node Version:  v22.16.0
+[debug] [2025-08-31T22:38:59.964Z] Time:          Sun Aug 31 2025 23:38:59 GMT+0100 (Hora de verão da Europa Ocidental)
+[debug] [2025-08-31T22:38:59.964Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-31T22:39:00.171Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-08-31T22:39:00.171Z] > authorizing via signed-in user (iagorafael12.is@gmail.com)
+[debug] [2025-08-31T22:39:00.171Z] [iam] checking project crisislineapp for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-08-31T22:39:00.173Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:00.173Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:00.174Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions [none]
+[debug] [2025-08-31T22:39:00.175Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions x-goog-quota-user=projects/crisislineapp
+[debug] [2025-08-31T22:39:00.175Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-08-31T22:39:00.914Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions 200
+[debug] [2025-08-31T22:39:00.914Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-08-31T22:39:00.914Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:00.914Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:00.914Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp [none]
+[debug] [2025-08-31T22:39:01.219Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp 200
+[debug] [2025-08-31T22:39:01.219Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp {"projectId":"crisislineapp","projectNumber":"1022052681225","displayName":"CrisisLineApp","name":"projects/crisislineapp","resources":{"hostingSite":"crisislineapp"},"state":"ACTIVE","etag":"1_083090b8-258f-4750-9d8e-3cb204ccaeb7"}
+[info] 
+[info] === Deploying to 'crisislineapp'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-08-31T22:39:01.224Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:01.224Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:01.224Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions [none]
+[debug] [2025-08-31T22:39:01.224Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-08-31T22:39:01.851Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions 200
+[debug] [2025-08-31T22:39:01.851Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions {"name":"projects/1022052681225/sites/crisislineapp/versions/40056f2b101687e1","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[crisislineapp]: beginning deploy... 
+[info] i  hosting[crisislineapp]: found 37 files in crisis-line-web/build 
+[debug] [2025-08-31T22:39:01.866Z] [hosting] uploading with 200 concurrency
+[debug] [2025-08-31T22:39:01.867Z] [hosting] hash cache [Y3Jpc2lzLWxpbmUtd2ViXGJ1aWxk] not populated
+[debug] [2025-08-31T22:39:01.907Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.907Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.908Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.908Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.908Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.908Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.909Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.909Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.910Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.910Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.910Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.911Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.911Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.911Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.912Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.912Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.912Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.913Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.913Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.914Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.914Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.914Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.915Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.915Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.916Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.916Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.916Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.917Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.917Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.917Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.918Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.918Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.918Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.919Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.919Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.920Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:01.920Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:43.208Z] ----------------------------------------------------------------------
+[debug] [2025-08-31T22:39:43.211Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\User\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting --force
+[debug] [2025-08-31T22:39:43.212Z] CLI Version:   14.15.1
+[debug] [2025-08-31T22:39:43.212Z] Platform:      win32
+[debug] [2025-08-31T22:39:43.212Z] Node Version:  v22.16.0
+[debug] [2025-08-31T22:39:43.213Z] Time:          Sun Aug 31 2025 23:39:43 GMT+0100 (Hora de verão da Europa Ocidental)
+[debug] [2025-08-31T22:39:43.213Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-31T22:39:43.391Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-08-31T22:39:43.392Z] > authorizing via signed-in user (iagorafael12.is@gmail.com)
+[debug] [2025-08-31T22:39:43.392Z] [iam] checking project crisislineapp for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-08-31T22:39:43.393Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:43.393Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:43.394Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions [none]
+[debug] [2025-08-31T22:39:43.394Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions x-goog-quota-user=projects/crisislineapp
+[debug] [2025-08-31T22:39:43.394Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-08-31T22:39:44.099Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions 200
+[debug] [2025-08-31T22:39:44.099Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/crisislineapp:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-08-31T22:39:44.099Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:44.099Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:44.100Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp [none]
+[debug] [2025-08-31T22:39:44.354Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp 200
+[debug] [2025-08-31T22:39:44.354Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/crisislineapp {"projectId":"crisislineapp","projectNumber":"1022052681225","displayName":"CrisisLineApp","name":"projects/crisislineapp","resources":{"hostingSite":"crisislineapp"},"state":"ACTIVE","etag":"1_083090b8-258f-4750-9d8e-3cb204ccaeb7"}
+[info] 
+[info] === Deploying to 'crisislineapp'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-08-31T22:39:44.359Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:44.359Z] Checked if tokens are valid: true, expires at: 1756683071657
+[debug] [2025-08-31T22:39:44.359Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions [none]
+[debug] [2025-08-31T22:39:44.359Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-08-31T22:39:45.301Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions 200
+[debug] [2025-08-31T22:39:45.301Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/crisislineapp/versions {"name":"projects/1022052681225/sites/crisislineapp/versions/34b116b9ccf40cfc","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[crisislineapp]: beginning deploy... 
+[info] i  hosting[crisislineapp]: found 37 files in crisis-line-web/build 
+[debug] [2025-08-31T22:39:45.316Z] [hosting] uploading with 200 concurrency
+[debug] [2025-08-31T22:39:45.317Z] [hosting] hash cache [Y3Jpc2lzLWxpbmUtd2ViXGJ1aWxk] not populated
+[debug] [2025-08-31T22:39:45.352Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.353Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.354Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.354Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.354Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.355Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.355Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.355Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.356Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.356Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.356Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.357Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.357Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.358Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.358Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.358Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.359Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.359Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.359Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.360Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.360Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.361Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.361Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.361Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.362Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.362Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.362Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.363Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.363Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.363Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.363Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.364Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.364Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.364Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.365Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.365Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-08-31T22:39:45.365Z] Error: UNKNOWN: unknown error, read
+[error] 
+[error] Error: An unexpected error has occurred.

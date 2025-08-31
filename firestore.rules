@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Events collection rules
+    match /events/{eventId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Administrador', 'Coordenador'];
+    }
+
+    // Allow users to read and write their own data
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false; // Prevent user deletion
+    }
+
+    // Allow admins to read all user data
+    match /users/{userId} {
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Administrador';
+    }
+
+    // Allow admins to update user roles and status
+    match /users/{userId} {
+      allow update: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Administrador' &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['role', 'status']);
+    }
+
+    // Allow event sign-ups
+    match /eventSignUps/{signUpId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // Allow call records - authenticated users can create, admins can read all
+    match /callRecords/{recordId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.submittedBy || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Administrador', 'Coordenador']);
+      allow update, delete: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Administrador', 'Coordenador'];
+    }
+  }
+} 
