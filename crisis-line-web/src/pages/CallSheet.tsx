@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -223,7 +223,6 @@ const CallSheet: React.FC = () => {
 
   // Get current section based on form logic
   const getCurrentSection = () => {
-    let section = 1;
     let step = 1;
     
     // Section 1: Basic Info (always first)

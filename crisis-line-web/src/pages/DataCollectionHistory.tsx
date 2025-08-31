@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../services/firebase/config';
@@ -91,7 +91,7 @@ const DataCollectionHistory: React.FC = () => {
     }
   };
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...records];
 
     if (dateFilter) {
@@ -131,7 +131,7 @@ const DataCollectionHistory: React.FC = () => {
 
     setFilteredRecords(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  };
+  }, [records, dateFilter, listenerFilter, callerSexFilter, callerAgeFilter, suicidalIdeationFilter, isPassiveFilter, themeFilter]);
 
   const clearFilters = () => {
     setDateFilter(null);
@@ -241,7 +241,7 @@ const DataCollectionHistory: React.FC = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [records, dateFilter, listenerFilter, callerSexFilter, callerAgeFilter, suicidalIdeationFilter, isPassiveFilter, themeFilter, applyFilters]);
+  }, [applyFilters]);
 
   // Early return after all hooks
   if (!isAdmin) {
