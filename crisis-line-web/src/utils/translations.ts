@@ -50,7 +50,7 @@ export const translations = {
   pages: {
     home: {
       title: 'Página Inicial',
-      description: 'Bem-vindo à Linha de Crise'
+      description: 'Bem-vindo!!!!'
     },
     calendar: {
       title: 'Calendário',
