@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { translations } from '../utils/translations';
+// import sosLogo from '../assets/sos-logo.png';
 
 const Navigation: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -11,15 +12,25 @@ const Navigation: React.FC = () => {
     return location.pathname === path;
   };
 
+  // Debug: Check if logo is loading
+  console.log('SOS Logo path:', '/sos-logo.png');
+
   return (
-    <nav className="sticky top-0 z-50 bg-brand-500 shadow-glass rounded-b-2xl font-sans">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-20">
-          <div className="flex items-center">
-            <Link to="/" className="text-3xl font-extrabold tracking-tight text-white drop-shadow-lg">
-              Linha de Crise
-            </Link>
-          </div>
+         <nav className="sticky top-0 z-50 bg-brand-500 shadow-glass rounded-b-2xl font-sans">
+       <div className="container mx-auto px-4">
+         <div className="flex justify-between items-center h-24">
+           <div className="flex items-center">
+             <Link to="/" className="flex items-center">
+               <img 
+                 src="/sos-logo.png" 
+                 alt="SOS Estudante" 
+                 className="h-20 w-auto drop-shadow-lg relative z-10"
+                 style={{ maxHeight: '80px', width: 'auto' }}
+                 onError={(e) => console.error('Logo failed to load:', e)}
+                 onLoad={() => console.log('Logo loaded successfully')}
+               />
+             </Link>
+           </div>
 
           <div className="flex items-center space-x-4">
             <Link
