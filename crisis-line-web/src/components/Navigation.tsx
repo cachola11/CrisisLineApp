@@ -22,7 +22,7 @@ const Navigation: React.FC = () => {
            <div className="flex items-center">
              <Link to="/" className="flex items-center">
                <img 
-                 src="/sos-logo.png" 
+                 src={process.env.PUBLIC_URL + '/sos-logo.png'} 
                  alt="SOS Estudante" 
                  className="h-20 w-auto drop-shadow-lg relative z-10"
                  style={{ maxHeight: '80px', width: 'auto' }}
