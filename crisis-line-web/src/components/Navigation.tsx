@@ -26,7 +26,16 @@ const Navigation: React.FC = () => {
                  alt="SOS Estudante" 
                  className="h-20 w-auto drop-shadow-lg relative z-10"
                  style={{ maxHeight: '80px', width: 'auto' }}
-                 onError={(e) => console.error('Logo failed to load:', e)}
+                 onError={(e) => {
+                   console.error('Logo failed to load:', e);
+                   // Show fallback text if image fails
+                   const target = e.target as HTMLImageElement;
+                   target.style.display = 'none';
+                   const fallback = document.createElement('span');
+                   fallback.textContent = 'SOS Estudante';
+                   fallback.className = 'text-white text-xl font-bold';
+                   target.parentNode?.appendChild(fallback);
+                 }}
                  onLoad={() => console.log('Logo loaded successfully')}
                />
              </Link>
