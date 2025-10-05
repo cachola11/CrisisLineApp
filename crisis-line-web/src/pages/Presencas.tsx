@@ -177,26 +177,6 @@ const Presencas: React.FC = () => {
     return attendanceMap[key]?.status || 'absent';
   };
 
-  const getConsecutiveAbsences = (userId: string) => {
-    const consecutiveAbsenceRanges: { start: number; end: number }[] = [];
-    
-    // Find all pairs of 2 consecutive absences
-    for (let i = 0; i < dates.length - 1; i++) {
-      const currentStatus = getAttendanceStatus(userId, dates[i]);
-      const nextStatus = getAttendanceStatus(userId, dates[i + 1]);
-      
-      if (currentStatus === 'absent' && nextStatus === 'absent') {
-        consecutiveAbsenceRanges.push({ start: i, end: i + 1 });
-      }
-    }
-    
-    return consecutiveAbsenceRanges;
-  };
-
-  const isInConsecutiveAbsence = (userId: string, dateIndex: number) => {
-    const consecutiveRanges = getConsecutiveAbsences(userId);
-    return consecutiveRanges.some(range => dateIndex >= range.start && dateIndex <= range.end);
-  };
 
   const filteredUsers = users.filter(user => 
     user.idNumber.toLowerCase().includes(searchTerm.toLowerCase())
@@ -227,7 +207,7 @@ const Presencas: React.FC = () => {
   return (
     <div className="min-h-screen bg-softpink-100 pb-12">
       <div className="max-w-7xl mx-auto px-4 pt-4 lg:pt-8">
-        {/* Header */}
+        {/* Header - Consistent with Admin screen */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -252,7 +232,7 @@ const Presencas: React.FC = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar - Consistent with Admin screen */}
         <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-glass p-4 lg:p-6 mb-6">
           <div className="flex items-center gap-4">
             <label className="text-brand-700 font-semibold flex items-center gap-2">
@@ -268,52 +248,47 @@ const Presencas: React.FC = () => {
           </div>
         </div>
 
-        {/* Attendance Grid */}
+        {/* Attendance Grid - Consistent with Admin screen */}
         <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-glass p-4 lg:p-6">
-          <div className="overflow-x-auto">
-            <div className="min-w-full">
-              <table className="w-full border-collapse">
-                <thead className="bg-gradient-to-r from-brand-100 to-softpink-100 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-3 lg:px-6 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider sticky left-0 z-20 bg-gradient-to-r from-brand-100 to-softpink-100 min-w-[150px]">
-                      <span className="mr-1">🆔</span> ID do Utilizador
-                    </th>
-                    {dates.map(date => (
-                      <th key={date} className="px-3 lg:px-6 py-3 text-center text-xs font-bold text-brand-900 uppercase tracking-wider min-w-[120px] relative group">
-                        <div className="flex flex-col items-center">
-                          <span>{format(parseISO(date), 'dd/MM/yyyy', { locale: pt })}</span>
-                          <button
-                            onClick={() => {
-                              setDateToDelete(date);
-                              setShowDeleteDateModal(true);
-                            }}
-                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                            title="Eliminar esta data"
-                          >
-                            ×
-                          </button>
-                        </div>
+          {filteredUsers.length > 0 ? (
+            <div className="overflow-x-auto rounded-2xl border border-brand-100 shadow-lg">
+              <div className="min-w-full">
+                <table className="w-full divide-y divide-brand-100 rounded-2xl bg-white/90">
+                  <thead className="bg-gradient-to-r from-brand-100 to-softpink-100 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-3 lg:px-6 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider sticky left-0 z-20 bg-gradient-to-r from-brand-100 to-softpink-100 min-w-[150px]">
+                        <span className="mr-1">🆔</span> ID do Utilizador
                       </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-brand-100">
-                  {filteredUsers.map((user, idx) => (
-                    <tr key={user.id} className={`transition hover:bg-softpink-200/60 ${idx % 2 === 0 ? 'bg-softpink-50/60' : 'bg-white/80'}`}>
-                      <td className="px-3 lg:px-6 py-3 whitespace-nowrap text-sm lg:text-lg font-semibold text-brand-800 align-middle sticky left-0 z-10 bg-white/90 backdrop-blur-sm">
-                        {user.idNumber}
-                      </td>
-                      {dates.map((date, dateIndex) => {
-                        const status = getAttendanceStatus(user.idNumber, date);
-                        const isInConsecutive = isInConsecutiveAbsence(user.idNumber, dateIndex);
-                        const consecutiveRanges = getConsecutiveAbsences(user.idNumber);
-                        const isFirstOfConsecutive = consecutiveRanges.some(range => range.start === dateIndex);
-                        
-                        return (
-                          <td key={date} className="px-2 py-2 text-center relative">
-                            <div className={`w-full h-12 flex items-center justify-center relative ${
-                              isInConsecutive ? 'ring-4 ring-yellow-400 ring-opacity-75 rounded-lg' : ''
-                            }`}>
+                      {dates.map(date => (
+                        <th key={date} className="px-3 lg:px-6 py-3 text-center text-xs font-bold text-brand-900 uppercase tracking-wider min-w-[120px] relative group">
+                          <div className="flex flex-col items-center">
+                            <span>{format(parseISO(date), 'dd/MM/yyyy', { locale: pt })}</span>
+                            <button
+                              onClick={() => {
+                                setDateToDelete(date);
+                                setShowDeleteDateModal(true);
+                              }}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                              title="Eliminar esta data"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-100">
+                    {filteredUsers.map((user, idx) => (
+                      <tr key={user.id} className={`transition hover:bg-softpink-200/60 ${idx % 2 === 0 ? 'bg-softpink-50/60' : 'bg-white/80'}`}>
+                        <td className="px-3 lg:px-6 py-3 whitespace-nowrap text-sm lg:text-lg font-semibold text-brand-800 align-middle sticky left-0 z-10 bg-white/90 backdrop-blur-sm">
+                          {user.idNumber}
+                        </td>
+                        {dates.map((date, dateIndex) => {
+                          const status = getAttendanceStatus(user.idNumber, date);
+                          
+                          return (
+                            <td key={date} className="px-2 py-2 text-center relative">
                               <button
                                 onClick={() => handleAttendanceToggle(user.idNumber, date)}
                                 className={`w-10 h-10 rounded-lg border-2 transition-all duration-200 shadow-sm hover:shadow-md ${
@@ -325,41 +300,38 @@ const Presencas: React.FC = () => {
                               >
                                 {status === 'present' ? '✓' : '✗'}
                               </button>
-                              
-                              {/* Red flag for consecutive absences */}
-                              {isFirstOfConsecutive && (
-                                <div className="absolute -top-1 -right-1">
-                                  <div className="w-6 h-6 rounded-full border-2 bg-red-500 border-red-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
-                                    🚩
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-          
-          {filteredUsers.length === 0 && searchTerm && (
+          ) : (
             <div className="text-center py-8 text-brand-400">
-              <span className="text-4xl mb-2 block">🔍</span>
-              Nenhum utilizador encontrado com o ID pesquisado.
-            </div>
-          )}
-          {filteredUsers.length === 0 && !searchTerm && users.length === 0 && (
-            <div className="text-center py-8 text-brand-400">
-              <span className="text-4xl mb-2 block">👥</span>
-              Nenhum utilizador encontrado.
+              {searchTerm ? (
+                <>
+                  <span className="text-4xl mb-2 block">🔍</span>
+                  Nenhum utilizador encontrado com o ID pesquisado.
+                </>
+              ) : users.length === 0 ? (
+                <>
+                  <span className="text-4xl mb-2 block">👥</span>
+                  Nenhum utilizador encontrado.
+                </>
+              ) : (
+                <>
+                  <span className="text-4xl mb-2 block">📅</span>
+                  Nenhuma data de presença adicionada ainda.
+                </>
+              )}
             </div>
           )}
         </div>
 
-        {/* Add Date Modal */}
+        {/* Add Date Modal - Consistent with Admin screen */}
         {showAddDateModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 animate-fadeIn p-4">
             <div className="bg-white rounded-2xl shadow-lg border-2 border-brand-200 w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col items-center">
@@ -394,7 +366,7 @@ const Presencas: React.FC = () => {
           </div>
         )}
 
-        {/* Delete Date Modal */}
+        {/* Delete Date Modal - Consistent with Admin screen */}
         {showDeleteDateModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 animate-fadeIn p-4">
             <div className="bg-white rounded-2xl shadow-lg border-2 border-red-500 w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col items-center">
