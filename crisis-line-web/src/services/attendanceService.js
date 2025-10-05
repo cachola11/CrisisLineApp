@@ -6,6 +6,7 @@ import {
     getDocs,
     addDoc,
     updateDoc,
+    deleteDoc,
     query,
     where,
     orderBy,
@@ -318,6 +319,72 @@ export const getFlagStatus = async (userId) => {
         return null;
     } catch (error) {
         console.error("Error getting flag status:", error);
+        throw error;
+    }
+};
+
+/**
+ * Adds a new attendance date to the system.
+ * @param {string} date The date to add (in YYYY-MM-DD format).
+ * @returns {Promise<void>}
+ */
+export const addAttendanceDate = async (date) => {
+    try {
+        // Create a document in the attendanceDates collection
+        const attendanceDatesCollection = collection(db, 'attendanceDates');
+        await addDoc(attendanceDatesCollection, {
+            date: date,
+            createdAt: serverTimestamp(),
+            createdBy: 'system' // You might want to pass the current user ID here
+        });
+        console.log("Attendance date added:", date);
+    } catch (error) {
+        console.error("Error adding attendance date:", error);
+        throw new Error(`Failed to add attendance date: ${error.message}`);
+    }
+};
+
+/**
+ * Deletes an attendance date from the system.
+ * @param {string} date The date to delete (in YYYY-MM-DD format).
+ * @returns {Promise<void>}
+ */
+export const deleteAttendanceDate = async (date) => {
+    try {
+        // First, delete all attendance records for this date
+        const attendanceQuery = query(attendanceCollection, where('date', '==', date));
+        const attendanceSnapshot = await getDocs(attendanceQuery);
+        
+        const deletePromises = attendanceSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        
+        // Then, delete the date from attendanceDates collection
+        const attendanceDatesCollection = collection(db, 'attendanceDates');
+        const dateQuery = query(attendanceDatesCollection, where('date', '==', date));
+        const dateSnapshot = await getDocs(dateQuery);
+        
+        const dateDeletePromises = dateSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(dateDeletePromises);
+        
+        console.log("Attendance date deleted:", date);
+    } catch (error) {
+        console.error("Error deleting attendance date:", error);
+        throw new Error(`Failed to delete attendance date: ${error.message}`);
+    }
+};
+
+/**
+ * Gets all attendance dates from the attendanceDates collection.
+ * @returns {Array} Array of dates sorted from oldest to newest.
+ */
+export const getAttendanceDates = async () => {
+    try {
+        const attendanceDatesCollection = collection(db, 'attendanceDates');
+        const snapshot = await getDocs(attendanceDatesCollection);
+        const dates = snapshot.docs.map(doc => doc.data().date);
+        return dates.sort(); // Sort from oldest to newest
+    } catch (error) {
+        console.error("Error getting attendance dates:", error);
         throw error;
     }
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getAllUsers } from '../services/userService';
+import { getAttendanceDates, addAttendanceDate, deleteAttendanceDate, getAllAttendanceRecords } from '../services/attendanceService';
 import { format, parseISO, compareAsc } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
@@ -35,33 +36,51 @@ const Presencas: React.FC = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const allUsers = await getAllUsers();
       
-      // Sort users by ID number in descending order
-      const sortedUsers = allUsers.sort((a, b) => b.idNumber.localeCompare(a.idNumber));
+      // Fetch users and dates in parallel
+      const [allUsers, savedDates, attendanceRecords] = await Promise.all([
+        getAllUsers(),
+        getAttendanceDates(),
+        getAllAttendanceRecords()
+      ]);
+      
+      // Sort users by ID number in ascending order (same as Admin screen)
+      const sortedUsers = allUsers.sort((a, b) => a.idNumber.localeCompare(b.idNumber));
       setUsers(sortedUsers);
       
-      // Initialize attendance map with all users marked as absent for all dates
+      // Set dates from database
+      setDates(savedDates);
+      
+      // Create attendance map from existing records
       const initialMap: { [key: string]: AttendanceRecord } = {};
+      
+      // Initialize all users as absent for all dates
       sortedUsers.forEach(user => {
-        dates.forEach(date => {
+        savedDates.forEach(date => {
           const key = `${user.idNumber}-${date}`;
-          if (!initialMap[key]) {
-            initialMap[key] = {
-              userId: user.idNumber,
-              date: date,
-              status: 'absent'
-            };
-          }
+          initialMap[key] = {
+            userId: user.idNumber,
+            date: date,
+            status: 'absent'
+          };
         });
       });
+      
+      // Override with actual attendance records
+      attendanceRecords.forEach(record => {
+        const key = `${record.userId}-${record.date}`;
+        if (initialMap[key]) {
+          initialMap[key].status = record.status;
+        }
+      });
+      
       setAttendanceMap(initialMap);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  }, [dates]);
+  }, []);
 
   useEffect(() => {
     if (hasPermission) {
@@ -84,47 +103,63 @@ const Presencas: React.FC = () => {
     }));
   };
 
-  const handleAddDate = () => {
+  const handleAddDate = async () => {
     if (!newDate) return;
     
-    // Add new date and sort from older to newer (left to right)
-    const updatedDates = [...dates, newDate].sort((a, b) => compareAsc(parseISO(a), parseISO(b)));
-    setDates(updatedDates);
-    
-    // Initialize attendance for all users for the new date
-    const newAttendanceMap = { ...attendanceMap };
-    users.forEach(user => {
-      const key = `${user.idNumber}-${newDate}`;
-      newAttendanceMap[key] = {
-        userId: user.idNumber,
-        date: newDate,
-        status: 'absent'
-      };
-    });
-    setAttendanceMap(newAttendanceMap);
-    
-    setNewDate('');
-    setShowAddDateModal(false);
+    try {
+      // Save the date to the database
+      await addAttendanceDate(newDate);
+      
+      // Add new date and sort from older to newer (left to right)
+      const updatedDates = [...dates, newDate].sort((a, b) => compareAsc(parseISO(a), parseISO(b)));
+      setDates(updatedDates);
+      
+      // Initialize attendance for all users for the new date
+      const newAttendanceMap = { ...attendanceMap };
+      users.forEach(user => {
+        const key = `${user.idNumber}-${newDate}`;
+        newAttendanceMap[key] = {
+          userId: user.idNumber,
+          date: newDate,
+          status: 'absent'
+        };
+      });
+      setAttendanceMap(newAttendanceMap);
+      
+      setNewDate('');
+      setShowAddDateModal(false);
+    } catch (error) {
+      console.error('Error adding date:', error);
+      alert('Erro ao adicionar data. Tente novamente.');
+    }
   };
 
-  const handleDeleteDate = () => {
+  const handleDeleteDate = async () => {
     if (!dateToDelete) return;
     
-    // Remove the date from dates array
-    const updatedDates = dates.filter(date => date !== dateToDelete);
-    setDates(updatedDates);
-    
-    // Remove all attendance records for this date
-    const newAttendanceMap = { ...attendanceMap };
-    Object.keys(newAttendanceMap).forEach(key => {
-      if (key.endsWith(`-${dateToDelete}`)) {
-        delete newAttendanceMap[key];
-      }
-    });
-    setAttendanceMap(newAttendanceMap);
-    
-    setDateToDelete('');
-    setShowDeleteDateModal(false);
+    try {
+      // Delete the date from the database
+      await deleteAttendanceDate(dateToDelete);
+      
+      // Remove the date from dates array
+      const updatedDates = dates.filter(date => date !== dateToDelete);
+      setDates(updatedDates);
+      
+      // Remove all attendance records for this date
+      const newAttendanceMap = { ...attendanceMap };
+      Object.keys(newAttendanceMap).forEach(key => {
+        if (key.endsWith(`-${dateToDelete}`)) {
+          delete newAttendanceMap[key];
+        }
+      });
+      setAttendanceMap(newAttendanceMap);
+      
+      setDateToDelete('');
+      setShowDeleteDateModal(false);
+    } catch (error) {
+      console.error('Error deleting date:', error);
+      alert('Erro ao eliminar data. Tente novamente.');
+    }
   };
 
   const getAttendanceStatus = (userId: string, date: string): 'present' | 'absent' => {
