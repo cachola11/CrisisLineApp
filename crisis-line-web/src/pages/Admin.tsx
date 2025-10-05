@@ -24,7 +24,9 @@ const Admin: React.FC = () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'users'));
       const usersList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setUsers(usersList);
+      // Sort users by ID in ascending order
+      const sortedUsers = usersList.sort((a, b) => a.idNumber.localeCompare(b.idNumber));
+      setUsers(sortedUsers);
     } catch (err) {
       setError('Erro ao carregar utilizadores');
     } finally {

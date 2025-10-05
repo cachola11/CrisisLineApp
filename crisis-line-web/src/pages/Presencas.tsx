@@ -1,157 +1,137 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getAllUsers } from '../services/userService';
-import {
-  getAllAttendanceRecords,
-  getAllAttendanceDates,
-  getAllAttendanceUsers,
-  markAttendance,
-  checkConsecutiveAbsences,
-  updateFlagStatus,
-  getFlagStatus
-} from '../services/attendanceService';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, compareAsc } from 'date-fns';
 import { pt } from 'date-fns/locale';
+
+interface AttendanceRecord {
+  userId: string;
+  date: string;
+  status: 'present' | 'absent';
+}
+
+interface User {
+  id: string;
+  name?: string;
+  email?: string;
+}
 
 const Presencas: React.FC = () => {
   const { user } = useAuth();
+  const [users, setUsers] = useState<User[]>([]);
   const [dates, setDates] = useState<string[]>([]);
-  const [userIds, setUserIds] = useState<string[]>([]);
+  const [attendanceMap, setAttendanceMap] = useState<{ [key: string]: AttendanceRecord }>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [attendanceMap, setAttendanceMap] = useState<{ [key: string]: any }>({});
-  const [flagStatuses, setFlagStatuses] = useState<{ [key: string]: any }>({});
   const [showAddDateModal, setShowAddDateModal] = useState(false);
   const [newDate, setNewDate] = useState('');
 
   // Check if user has permission to access this page
   const hasPermission = user && (user.role === 'Coordenador' || user.role === 'Administrador');
 
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const allUsers = await getAllUsers();
+      
+      // Sort users by ID in descending order
+      const sortedUsers = allUsers.sort((a, b) => b.id.localeCompare(a.id));
+      setUsers(sortedUsers);
+      
+      // Initialize attendance map with all users marked as absent for all dates
+      const initialMap: { [key: string]: AttendanceRecord } = {};
+      sortedUsers.forEach(user => {
+        dates.forEach(date => {
+          const key = `${user.id}-${date}`;
+          if (!initialMap[key]) {
+            initialMap[key] = {
+              userId: user.id,
+              date: date,
+              status: 'absent'
+            };
+          }
+        });
+      });
+      setAttendanceMap(initialMap);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [dates]);
+
   useEffect(() => {
     if (hasPermission) {
       fetchData();
     }
-  }, [hasPermission]);
+  }, [hasPermission, fetchData]);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [records, users, attendanceDates, attendanceUsers] = await Promise.all([
-        getAllAttendanceRecords(),
-        getAllUsers(),
-        getAllAttendanceDates(),
-        getAllAttendanceUsers()
-      ]);
-
-      setAttendanceRecords(records);
-      setAllUsers(users);
-      setDates(attendanceDates);
-      setUserIds(attendanceUsers);
-
-      // Create attendance map for quick lookup
-      const map: { [key: string]: any } = {};
-      records.forEach(record => {
-        map[`${record.userId}-${record.date}`] = record;
-      });
-      setAttendanceMap(map);
-
-      // Fetch flag statuses for all users
-      const flagPromises = attendanceUsers.map(userId => getFlagStatus(userId));
-      const flagResults = await Promise.all(flagPromises);
-      const flagMap: { [key: string]: any } = {};
-      flagResults.forEach((flag, index) => {
-        if (flag) {
-          flagMap[attendanceUsers[index]] = flag;
-        }
-      });
-      setFlagStatuses(flagMap);
-    } catch (error) {
-      console.error('Error fetching attendance data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAttendanceClick = async (userId: string, date: string) => {
-    if (!user) return;
-
-    try {
-      const currentRecord = attendanceMap[`${userId}-${date}`];
-      const newStatus = (!currentRecord || currentRecord.status === 'absent') ? 'present' : 'absent';
-      
-      await markAttendance(userId, date, newStatus, user.uid);
-      
-      // Update local state
-      const updatedMap = { ...attendanceMap };
-      if (currentRecord) {
-        updatedMap[`${userId}-${date}`] = { ...currentRecord, status: newStatus };
-      } else {
-        updatedMap[`${userId}-${date}`] = {
-          userId,
-          date,
-          status: newStatus,
-          markedBy: user.uid,
-          markedAt: new Date()
-        };
+  const handleAttendanceToggle = (userId: string, date: string) => {
+    const key = `${userId}-${date}`;
+    const currentRecord = attendanceMap[key];
+    const newStatus = currentRecord?.status === 'present' ? 'absent' : 'present';
+    
+    setAttendanceMap(prev => ({
+      ...prev,
+      [key]: {
+        userId,
+        date,
+        status: newStatus
       }
-      setAttendanceMap(updatedMap);
-
-      // Refresh data to update consecutive absences
-      await fetchData();
-    } catch (error) {
-      console.error('Error updating attendance:', error);
-    }
+    }));
   };
 
-  const handleAddDate = async () => {
+  const handleAddDate = () => {
     if (!newDate) return;
-
-    try {
-      // Add the new date to the dates array and sort
-      const updatedDates = [...dates, newDate].sort();
-      setDates(updatedDates);
-      setNewDate('');
-      setShowAddDateModal(false);
-    } catch (error) {
-      console.error('Error adding date:', error);
-    }
+    
+    // Add new date and sort from older to newer (left to right)
+    const updatedDates = [...dates, newDate].sort((a, b) => compareAsc(parseISO(a), parseISO(b)));
+    setDates(updatedDates);
+    
+    // Initialize attendance for all users for the new date
+    const newAttendanceMap = { ...attendanceMap };
+    users.forEach(user => {
+      const key = `${user.id}-${newDate}`;
+      newAttendanceMap[key] = {
+        userId: user.id,
+        date: newDate,
+        status: 'absent'
+      };
+    });
+    setAttendanceMap(newAttendanceMap);
+    
+    setNewDate('');
+    setShowAddDateModal(false);
   };
 
-  const handleFlagClick = async (userId: string) => {
-    if (!user) return;
+  const getAttendanceStatus = (userId: string, date: string): 'present' | 'absent' => {
+    const key = `${userId}-${date}`;
+    return attendanceMap[key]?.status || 'absent';
+  };
 
-    try {
-      const currentFlag = flagStatuses[userId];
-      const newFlagStatus = !currentFlag?.isFlagged;
+  const getConsecutiveAbsences = (userId: string) => {
+    const consecutiveAbsenceRanges: { start: number; end: number }[] = [];
+    
+    // Find all pairs of 2 consecutive absences
+    for (let i = 0; i < dates.length - 1; i++) {
+      const currentStatus = getAttendanceStatus(userId, dates[i]);
+      const nextStatus = getAttendanceStatus(userId, dates[i + 1]);
       
-      await updateFlagStatus(userId, newFlagStatus, user.uid);
-      
-      // Update local state
-      setFlagStatuses(prev => ({
-        ...prev,
-        [userId]: {
-          ...currentFlag,
-          isFlagged: newFlagStatus,
-          flaggedBy: user.uid,
-          flaggedAt: new Date()
-        }
-      }));
-    } catch (error) {
-      console.error('Error updating flag status:', error);
+      if (currentStatus === 'absent' && nextStatus === 'absent') {
+        consecutiveAbsenceRanges.push({ start: i, end: i + 1 });
+      }
     }
+    
+    return consecutiveAbsenceRanges;
   };
 
-  const getAttendanceStatus = (userId: string, date: string) => {
-    const record = attendanceMap[`${userId}-${date}`];
-    return record ? record.status : 'absent';
+  const isInConsecutiveAbsence = (userId: string, dateIndex: number) => {
+    const consecutiveRanges = getConsecutiveAbsences(userId);
+    return consecutiveRanges.some(range => dateIndex >= range.start && dateIndex <= range.end);
   };
 
-  const getConsecutiveAbsenceInfo = (userId: string) => {
-    return checkConsecutiveAbsences(userId, dates, attendanceMap);
-  };
-
-  const filteredUserIds = userIds.filter(userId => 
-    userId.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(user => 
+    user.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (!hasPermission) {
@@ -208,13 +188,13 @@ const Presencas: React.FC = () => {
           </div>
         </div>
 
-        {/* Attendance Table */}
+        {/* Attendance Grid */}
         <div className="bg-white rounded-3xl shadow-glass p-6 overflow-x-auto">
           <div className="min-w-full">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="border border-gray-300 bg-gray-100 p-3 text-left font-semibold text-gray-700 sticky left-0 z-10">
+                  <th className="border border-gray-300 bg-gray-100 p-3 text-left font-semibold text-gray-700 sticky left-0 z-10 min-w-[150px]">
                     ID do Utilizador
                   </th>
                   {dates.map(date => (
@@ -222,82 +202,51 @@ const Presencas: React.FC = () => {
                       {format(parseISO(date), 'dd/MM/yyyy', { locale: pt })}
                     </th>
                   ))}
-                  <th className="border border-gray-300 bg-gray-100 p-3 text-center font-semibold text-gray-700 min-w-[80px]">
-                    Flag
-                  </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUserIds.map(userId => {
-                  const consecutiveInfo = getConsecutiveAbsenceInfo(userId);
-                  const isFlagged = flagStatuses[userId]?.isFlagged;
-                  
-                  return (
-                    <tr key={userId} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 p-3 font-mono text-sm bg-white sticky left-0 z-10">
-                        {userId}
-                      </td>
-                      {dates.map((date, dateIndex) => {
-                        const status = getAttendanceStatus(userId, date);
-                        const isInConsecutiveAbsence = consecutiveInfo.flaggedDates.includes(date);
-                        const isFirstOfConsecutive = isInConsecutiveAbsence && 
-                          (dateIndex === 0 || !consecutiveInfo.flaggedDates.includes(dates[dateIndex - 1]));
-                        
-                        return (
-                          <td key={date} className="border border-gray-300 p-1 relative">
-                            <div className={`w-full h-12 flex items-center justify-center cursor-pointer transition-all duration-200 ${
-                              isInConsecutiveAbsence ? 'ring-4 ring-yellow-400 ring-opacity-75' : ''
-                            }`}>
-                              <button
-                                onClick={() => handleAttendanceClick(userId, date)}
-                                className={`w-10 h-10 rounded-lg border-2 transition-all duration-200 ${
-                                  status === 'present' 
-                                    ? 'bg-green-500 border-green-600 hover:bg-green-600' 
-                                    : 'bg-red-500 border-red-600 hover:bg-red-600'
-                                }`}
-                                title={`${status === 'present' ? 'Presente' : 'Ausente'} - Clique para alterar`}
-                              >
-                                {status === 'present' ? '✓' : '✗'}
-                              </button>
-                              
-                              {/* Red flag for consecutive absences */}
-                              {isFirstOfConsecutive && consecutiveInfo.isFlagged && (
-                                <div className="absolute -top-1 -right-1">
-                                  <button
-                                    onClick={() => handleFlagClick(userId)}
-                                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all duration-200 ${
-                                      isFlagged 
-                                        ? 'bg-green-500 border-green-600 text-white' 
-                                        : 'bg-red-500 border-red-600 text-white hover:bg-red-600'
-                                    }`}
-                                    title={isFlagged ? 'Flag resolvido - Clique para marcar como não resolvido' : 'Flag ativo - Clique para resolver'}
-                                  >
-                                    🚩
-                                  </button>
+                {filteredUsers.map(user => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 p-3 font-mono text-sm bg-white sticky left-0 z-10">
+                      {user.id}
+                    </td>
+                    {dates.map((date, dateIndex) => {
+                      const status = getAttendanceStatus(user.id, date);
+                      const isInConsecutive = isInConsecutiveAbsence(user.id, dateIndex);
+                      const consecutiveRanges = getConsecutiveAbsences(user.id);
+                      const isFirstOfConsecutive = consecutiveRanges.some(range => range.start === dateIndex);
+                      
+                      return (
+                        <td key={date} className="border border-gray-300 p-1 relative">
+                          <div className={`w-full h-12 flex items-center justify-center relative ${
+                            isInConsecutive ? 'ring-4 ring-yellow-400 ring-opacity-75' : ''
+                          }`}>
+                            <button
+                              onClick={() => handleAttendanceToggle(user.id, date)}
+                              className={`w-10 h-10 rounded-lg border-2 transition-all duration-200 ${
+                                status === 'present' 
+                                  ? 'bg-green-500 border-green-600 hover:bg-green-600' 
+                                  : 'bg-red-500 border-red-600 hover:bg-red-600'
+                              }`}
+                              title={`${status === 'present' ? 'Presente' : 'Ausente'} - Clique para alterar`}
+                            >
+                              {status === 'present' ? '✓' : '✗'}
+                            </button>
+                            
+                            {/* Red flag for consecutive absences */}
+                            {isFirstOfConsecutive && (
+                              <div className="absolute -top-1 -right-1">
+                                <div className="w-6 h-6 rounded-full border-2 bg-red-500 border-red-600 text-white flex items-center justify-center text-xs font-bold">
+                                  🚩
                                 </div>
-                              )}
-                            </div>
-                          </td>
-                        );
-                      })}
-                      <td className="border border-gray-300 p-3 text-center">
-                        {consecutiveInfo.isFlagged && (
-                          <button
-                            onClick={() => handleFlagClick(userId)}
-                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all duration-200 ${
-                              isFlagged 
-                                ? 'bg-green-500 border-green-600 text-white' 
-                                : 'bg-red-500 border-red-600 text-white hover:bg-red-600'
-                            }`}
-                            title={isFlagged ? 'Flag resolvido' : 'Flag ativo - Clique para resolver'}
-                          >
-                            🚩
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
