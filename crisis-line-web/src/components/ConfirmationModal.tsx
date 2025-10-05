@@ -25,15 +25,15 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md relative">
-        <h2 className="text-2xl font-bold text-brand-700 mb-4">{title}</h2>
-        <p className="text-brand-800 mb-6">{message}</p>
-        <div className="flex justify-end gap-4">
+      <div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8 w-full max-w-md relative">
+        <h2 className="text-lg lg:text-2xl font-bold text-brand-700 mb-4">{title}</h2>
+        <p className="text-brand-800 mb-6 text-sm lg:text-base">{message}</p>
+        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="px-6 py-2 rounded-full font-bold text-brand-700 bg-softpink-100 border border-brand-200 hover:bg-brand-100 transition disabled:opacity-50"
+            className="px-4 lg:px-6 py-2 rounded-full font-bold text-brand-700 bg-softpink-100 border border-brand-200 hover:bg-brand-100 transition disabled:opacity-50 text-sm lg:text-base"
           >
             {cancelText}
           </button>
@@ -41,7 +41,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="px-6 py-2 rounded-full font-bold text-white bg-danger hover:bg-danger/90 transition disabled:opacity-50"
+            className="px-4 lg:px-6 py-2 rounded-full font-bold text-white bg-danger hover:bg-danger/90 transition disabled:opacity-50 text-sm lg:text-base"
           >
             {isLoading ? 'A confirmar...' : confirmText}
           </button>

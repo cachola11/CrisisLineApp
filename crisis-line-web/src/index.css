@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Enhanced responsive base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: clamp(14px, 2.5vw, 16px); /* Responsive base font size */
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -9,9 +19,41 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Responsive container utilities */
+@layer utilities {
+  .container-responsive {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: clamp(0.5rem, 2vw, 2rem);
+    padding-right: clamp(0.5rem, 2vw, 2rem);
+  }
+  
+  .text-responsive {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+  
+  .heading-responsive {
+    font-size: clamp(1.25rem, 4vw, 2rem);
+  }
+  
+  .spacing-responsive {
+    padding: clamp(0.5rem, 2vw, 1.5rem);
+  }
+}
+
+/* Smooth transitions for zoom changes */
+@layer base {
+  * {
+    transition: font-size 0.2s ease, padding 0.2s ease, margin 0.2s ease;
+  }
 }
