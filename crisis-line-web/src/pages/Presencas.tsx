@@ -106,7 +106,15 @@ const Presencas: React.FC = () => {
   const handleAddDate = async () => {
     if (!newDate) return;
     
+    // Check if date already exists
+    if (dates.includes(newDate)) {
+      alert('Esta data já existe na lista.');
+      return;
+    }
+    
     try {
+      console.log('Adding date:', newDate);
+      
       // Save the date to the database
       await addAttendanceDate(newDate);
       
@@ -128,9 +136,11 @@ const Presencas: React.FC = () => {
       
       setNewDate('');
       setShowAddDateModal(false);
+      
+      console.log('Date added successfully:', newDate);
     } catch (error) {
       console.error('Error adding date:', error);
-      alert('Erro ao adicionar data. Tente novamente.');
+      alert(`Erro ao adicionar data: ${error.message}`);
     }
   };
 
@@ -335,10 +345,16 @@ const Presencas: React.FC = () => {
             </div>
           </div>
           
-          {filteredUsers.length === 0 && (
+          {filteredUsers.length === 0 && searchTerm && (
             <div className="text-center py-8 text-brand-400">
               <span className="text-4xl mb-2 block">🔍</span>
               Nenhum utilizador encontrado com o ID pesquisado.
+            </div>
+          )}
+          {filteredUsers.length === 0 && !searchTerm && users.length === 0 && (
+            <div className="text-center py-8 text-brand-400">
+              <span className="text-4xl mb-2 block">👥</span>
+              Nenhum utilizador encontrado.
             </div>
           )}
         </div>

@@ -46,21 +46,40 @@ const Calendar: React.FC = () => {
         return;
       }
       
-      const [userEvents, allSignUps, users] = await Promise.all([
-        getEventsForUser(user.role),
-        getAllEventSignUps(),
-        getAllUsers()
-      ]);
-      setEvents(userEvents);
-      setAllUsers(users);
-      // Build signUpsMap: { [eventId]: signUp[] }
-      const signUpsObj: { [eventId: string]: any[] } = {};
-      for (const su of allSignUps) {
-        if (!signUpsObj[su.eventId]) signUpsObj[su.eventId] = [];
-        signUpsObj[su.eventId].push(su);
+      try {
+        console.log('Fetching calendar data for user role:', user.role);
+        
+        const [userEvents, allSignUps, users] = await Promise.all([
+          getEventsForUser(user.role),
+          getAllEventSignUps(),
+          getAllUsers()
+        ]);
+        
+        console.log('Calendar data fetched successfully:', {
+          events: userEvents.length,
+          signUps: allSignUps.length,
+          users: users.length
+        });
+        
+        setEvents(userEvents);
+        setAllUsers(users);
+        
+        // Build signUpsMap: { [eventId]: signUp[] }
+        const signUpsObj: { [eventId: string]: any[] } = {};
+        for (const su of allSignUps) {
+          if (!signUpsObj[su.eventId]) signUpsObj[su.eventId] = [];
+          signUpsObj[su.eventId].push(su);
+        }
+        setSignUpsMap(signUpsObj);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching calendar data:', error);
+        setLoading(false);
+        // Set empty arrays to prevent infinite loading
+        setEvents([]);
+        setAllUsers([]);
+        setSignUpsMap({});
       }
-      setSignUpsMap(signUpsObj);
-      setLoading(false);
     };
     fetchData();
   }, [user]);
