@@ -10,13 +10,11 @@ import {
   updateFlagStatus,
   getFlagStatus
 } from '../services/attendanceService';
-import { format, addDays, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
 const Presencas: React.FC = () => {
   const { user } = useAuth();
-  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [dates, setDates] = useState<string[]>([]);
   const [userIds, setUserIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

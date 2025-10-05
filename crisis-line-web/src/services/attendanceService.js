@@ -3,16 +3,13 @@ import { db } from '../services/firebase/config';
 import {
     collection,
     doc,
-    getDoc,
     getDocs,
     addDoc,
     updateDoc,
-    deleteDoc,
     query,
     where,
     orderBy,
     serverTimestamp,
-    writeBatch,
     Timestamp
 } from 'firebase/firestore';
 
@@ -237,7 +234,6 @@ export const getAllAttendanceUsers = async () => {
  * @returns {Object} Object with consecutive absence information.
  */
 export const checkConsecutiveAbsences = (userId, dates, attendanceMap) => {
-    const consecutiveAbsences = [];
     let currentStreak = 0;
     let maxStreak = 0;
     let flaggedDates = [];
