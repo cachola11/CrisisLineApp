@@ -40,9 +40,9 @@ export const translations = {
   navigation: {
     home: 'Página Inicial',
     calendar: 'Calendário',
-    dataCollection: 'Recolha de Dados',
-    dataCollectionHistory: 'Histórico de Dados',
+    dataCollection: 'Ficha de Chamada',
     admin: 'Administração',
+    linhaticos: 'Linháticos',
     userManagement: 'Gestão de Utilizadores',
     login: 'Iniciar Sessão',
     signup: 'Criar Conta'
@@ -63,6 +63,10 @@ export const translations = {
     admin: {
       title: 'Administração',
       description: 'Gerir utilizadores e configurações'
+    },
+    linhaticos: {
+      title: 'Linháticos',
+      description: 'Gestão de pagamentos de quotas anuais'
     }
   },
   userManagement: {
@@ -80,6 +84,7 @@ export const translations = {
     'Turno': '☎️ Turno',
     'Teambuilding': '🎉 Teambuilding',
     'Evento Aberto': '📢 Evento Aberto',
-    'Reunião Coordenação': '💻 Reunião Coordenação'
+    'Reunião Coordenação': '💻 Reunião Coordenação',
+    'Reunião Geral': '👥 Reunião Geral'
   }
 }; 

@@ -12,7 +12,8 @@ import Admin from './pages/Admin';
 import Calendar from './pages/Calendar';
 import CallSheet from './pages/CallSheet';
 import EventManagement from './pages/EventManagement';
-import DataCollectionHistory from './pages/DataCollectionHistory';
+import Presencas from './pages/Presencas';
+import Linhaticos from './pages/Linhaticos';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -44,7 +45,7 @@ const App: React.FC = () => {
           <Router>
             <div className="min-h-screen bg-gray-100">
               <Navigation />
-              <main className="container mx-auto py-4">
+              <main className="container mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 py-2 sm:py-4 lg:py-6">
                 <Suspense fallback={<div className="flex items-center justify-center min-h-screen">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
                 </div>}>
@@ -66,26 +67,30 @@ const App: React.FC = () => {
                       </RoleRoute>
                     } />
 
-                    {/* Coordenador and above: Event Management */}
+                    {/* Coordenador and above: Event Management and Presenças */}
                     <Route path="/event-management" element={
                       <RoleRoute allowedRoles={['Coordenador', 'Administrador']}>
                         <EventManagement />
                       </RoleRoute>
                     } />
+                    <Route path="/presencas" element={
+                      <RoleRoute allowedRoles={['Coordenador', 'Administrador']}>
+                        <Presencas />
+                      </RoleRoute>
+                    } />
 
-                    {/* Admin only: Admin tab */}
+                    {/* Admin only: Linhaticos and Admin tab */}
+                    <Route path="/linhaticos" element={
+                      <RoleRoute allowedRoles={['Administrador']}>
+                        <Linhaticos />
+                      </RoleRoute>
+                    } />
                     <Route path="/admin" element={
                       <RoleRoute allowedRoles={['Administrador']}>
                         <Admin />
                       </RoleRoute>
                     } />
 
-                    {/* Admin only: Data Collection History */}
-                    <Route path="/data-collection-history" element={
-                      <RoleRoute allowedRoles={['Administrador']}>
-                        <DataCollectionHistory />
-                      </RoleRoute>
-                    } />
 
                     {/* 404 route */}
                     <Route path="*" element={<div className="flex items-center justify-center min-h-screen">

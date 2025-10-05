@@ -41,8 +41,13 @@ const convertTimestampsToDates = (docData) => {
 export const createEvent = async (eventData) => {
     try {
         // Validate required fields
-        const requiredFields = ['title', 'description', 'eventType', 'startTime', 'endTime', 'maxCapacity', 'coordinatorUid'];
+        const requiredFields = ['title', 'description', 'eventType', 'startTime', 'endTime', 'coordinatorUid'];
         const missingFields = requiredFields.filter(field => !eventData[field]);
+        
+        // Special validation for maxCapacity (0 is valid for unlimited)
+        if (eventData.maxCapacity === undefined || eventData.maxCapacity === null) {
+            missingFields.push('maxCapacity');
+        }
         
         if (missingFields.length > 0) {
             throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
@@ -56,9 +61,9 @@ export const createEvent = async (eventData) => {
             throw new Error('Invalid end time');
         }
 
-        // Ensure maxCapacity is a positive number
-        if (typeof eventData.maxCapacity !== 'number' || eventData.maxCapacity <= 0) {
-            throw new Error('maxCapacity must be a positive number');
+        // Ensure maxCapacity is a non-negative number (0 means unlimited)
+        if (typeof eventData.maxCapacity !== 'number' || eventData.maxCapacity < 0) {
+            throw new Error('maxCapacity must be a non-negative number (0 = unlimited)');
         }
 
         const docRef = await addDoc(eventsCollection, {
@@ -111,6 +116,14 @@ export const getAllEvents = async () => {
             id: doc.id,
             ...convertTimestampsToDates(doc.data())
         }));
+        
+        // Sort events by startTime in ascending order (earliest first)
+        events.sort((a, b) => {
+            const timeA = new Date(a.startTime).getTime();
+            const timeB = new Date(b.startTime).getTime();
+            return timeA - timeB;
+        });
+        
         console.log("getAllEvents: Fetched events:", events);
         return events;
     } catch (error) {
@@ -142,9 +155,9 @@ export const updateEvent = async (id, newData) => {
             throw new Error('Invalid end time');
         }
 
-        // Validate maxCapacity if provided
-        if (newData.maxCapacity !== undefined && (typeof newData.maxCapacity !== 'number' || newData.maxCapacity <= 0)) {
-            throw new Error('maxCapacity must be a positive number');
+        // Validate maxCapacity if provided (0 means unlimited)
+        if (newData.maxCapacity !== undefined && (typeof newData.maxCapacity !== 'number' || newData.maxCapacity < 0)) {
+            throw new Error('maxCapacity must be a non-negative number (0 = unlimited)');
         }
 
         await updateDoc(eventRef, {
@@ -368,14 +381,14 @@ export const getEventsForUser = async (userRole) => {
 
     switch (userRole) {
         case 'Visitante':
-            // Visitante: allow read: if resource.data.type == 'Evento Aberto' && resource.data.status == 'published'; [cite: 264]
-            conditions.push(where('type', '==', 'Evento Aberto'));
+            // Visitante: allow read: if resource.data.eventType in ['Evento Aberto', 'Reunião Geral'] && resource.data.status == 'published'; [cite: 264]
+            conditions.push(where('eventType', 'in', ['Evento Aberto', 'Reunião Geral']));
             conditions.push(where('status', '==', 'published'));
             break;
         case 'Voluntário':
-            // Voluntário: allow read: if resource.data.status == 'published' && resource.data.type in ['Turno', 'Teambuilding', 'Evento Aberto']; [cite: 265]
+            // Voluntário: allow read: if resource.data.status == 'published' && resource.data.eventType in ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Geral']; [cite: 265]
             conditions.push(where('status', '==', 'published'));
-            conditions.push(where('type', 'in', ['Turno', 'Teambuilding', 'Evento Aberto']));
+            conditions.push(where('eventType', 'in', ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Geral']));
             break;
         case 'Coordenador':
         case 'Administrador':
@@ -398,8 +411,12 @@ export const getEventsForUser = async (userRole) => {
             id: doc.id,
             ...convertTimestampsToDates(doc.data())
         }));
-        console.log(`Workspaceed ${events.length} events for role: ${userRole}`);
-        return events;
+        
+        // Normalize event type from `eventType` to `type` for backwards compatibility
+        const normalizedEvents = events.map(ev => ({ ...ev, type: ev.eventType || ev.type }));
+        
+        console.log(`Fetched ${normalizedEvents.length} events for role: ${userRole}`);
+        return normalizedEvents;
     } catch (error) {
         console.error(`Error fetching events for user role '${userRole}':`, error);
         throw error;

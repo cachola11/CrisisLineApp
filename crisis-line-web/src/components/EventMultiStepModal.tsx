@@ -7,7 +7,7 @@ interface EventMultiStepModalProps {
   onCreate: (eventData: any) => Promise<void>;
 }
 
-const EVENT_TYPES = ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Coordenação'];
+const EVENT_TYPES = ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Coordenação', 'Reunião Geral'];
 const RECURRENCE_OPTIONS = [
   { value: 'weekdays', label: 'Dias de semana' },
   { value: 'weekends', label: 'Fins de semana' },
@@ -29,6 +29,7 @@ const EVENT_TYPE_EMOJIS: Record<string, string> = {
   'Teambuilding': '🎉',
   'Evento Aberto': '📢',
   'Reunião Coordenação': '💻',
+  'Reunião Geral': '👥',
 };
 
 const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClose, onCreate }) => {
@@ -70,7 +71,7 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
     }
     if (step === 3) {
       if (formData.maxCapacity === undefined || formData.maxCapacity === null || isNaN(formData.maxCapacity) || formData.maxCapacity < 0) {
-        setError('Capacidade máxima deve ser um número positivo ou 0 para ilimitado.');
+        setError('Capacidade máxima deve ser um número maior ou igual a 0 (0 = ilimitado).');
         return false;
       }
     }
@@ -95,13 +96,15 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
 
   // Stepper
   const renderStepper = () => (
-    <div className="flex items-center justify-center mb-6">
-      {steps.map((label, idx) => (
-        <div key={label} className="flex items-center">
-          <div className={`rounded-full w-8 h-8 flex items-center justify-center font-bold text-white transition-colors duration-200 ${step === idx ? 'bg-brand-500' : 'bg-softpink-200 text-brand-400'}`}>{idx + 1}</div>
-          {idx < steps.length - 1 && <div className="w-8 h-1 bg-softpink-200 mx-2" />}
-        </div>
-      ))}
+    <div className="flex items-center justify-center mb-4 lg:mb-6 overflow-x-auto">
+      <div className="flex items-center min-w-max">
+        {steps.map((label, idx) => (
+          <div key={label} className="flex items-center">
+            <div className={`rounded-full w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center font-bold text-white transition-colors duration-200 text-xs lg:text-sm ${step === idx ? 'bg-brand-500' : 'bg-softpink-200 text-brand-400'}`}>{idx + 1}</div>
+            {idx < steps.length - 1 && <div className="w-4 lg:w-8 h-1 bg-softpink-200 mx-1 lg:mx-2" />}
+          </div>
+        ))}
+      </div>
     </div>
   );
 
@@ -112,9 +115,9 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
         return (
           <div className="space-y-4">
             <label className="block font-semibold mb-2">Tipo de evento</label>
-            <div className="flex space-x-4">
-              <button type="button" className={`px-4 py-2 rounded-full font-bold transition-all duration-200 ${!isRecurring ? 'bg-brand-500 text-white' : 'bg-softpink-100 text-brand-700 border border-brand-200'}`} onClick={() => setIsRecurring(false)}>Único</button>
-              <button type="button" className={`px-4 py-2 rounded-full font-bold transition-all duration-200 ${isRecurring ? 'bg-brand-500 text-white' : 'bg-softpink-100 text-brand-700 border border-brand-200'}`} onClick={() => setIsRecurring(true)}>Recorrente</button>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+              <button type="button" className={`px-4 py-2 rounded-full font-bold transition-all duration-200 text-sm lg:text-base ${!isRecurring ? 'bg-brand-500 text-white' : 'bg-softpink-100 text-brand-700 border border-brand-200'}`} onClick={() => setIsRecurring(false)}>Único</button>
+              <button type="button" className={`px-4 py-2 rounded-full font-bold transition-all duration-200 text-sm lg:text-base ${isRecurring ? 'bg-brand-500 text-white' : 'bg-softpink-100 text-brand-700 border border-brand-200'}`} onClick={() => setIsRecurring(true)}>Recorrente</button>
             </div>
           </div>
         );
@@ -122,16 +125,16 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
         return (
           <div className="space-y-4">
             <div>
-              <label className="block mb-1 font-semibold text-brand-700">Título</label>
-              <input type="text" className="border rounded-full px-4 py-2 w-full bg-white/80 border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-brand-700 placeholder:text-brand-200" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
+              <label className="block mb-1 font-semibold text-brand-700 text-sm lg:text-base">Título</label>
+              <input type="text" className="border rounded-full px-4 py-2 w-full bg-white/80 border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-brand-700 placeholder:text-brand-200 text-sm lg:text-base" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
             </div>
             <div>
-              <label className="block mb-1 font-semibold text-brand-700">Descrição</label>
-              <textarea className="border rounded-2xl px-4 py-2 w-full bg-white/80 border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-brand-700 placeholder:text-brand-200" value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} required />
+              <label className="block mb-1 font-semibold text-brand-700 text-sm lg:text-base">Descrição</label>
+              <textarea className="border rounded-2xl px-4 py-2 w-full bg-white/80 border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-brand-700 placeholder:text-brand-200 text-sm lg:text-base min-h-[80px]" value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} required />
             </div>
             <div>
-              <label className="block mb-1 font-semibold text-brand-700">Tipo</label>
-              <select className="border rounded-full px-4 py-2 w-full bg-white/80 border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-brand-700" value={formData.type || ''} onChange={e => setFormData({ ...formData, type: e.target.value })} required>
+              <label className="block mb-1 font-semibold text-brand-700 text-sm lg:text-base">Tipo</label>
+              <select className="border rounded-full px-4 py-2 w-full bg-white/80 border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-brand-700 text-sm lg:text-base" value={formData.type || ''} onChange={e => setFormData({ ...formData, type: e.target.value })} required>
                 <option value="">Selecione o tipo</option>
                 {EVENT_TYPES.map(type => <option key={type} value={type}>{EVENT_TYPE_EMOJIS[type]} {type}</option>)}
               </select>
@@ -183,7 +186,7 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
           <div className="space-y-4">
             <div>
               <label className="block mb-1 font-semibold text-brand-700">Capacidade Máxima</label>
-              <input type="number" className="border rounded-full px-4 py-2 w-full bg-white/80 border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-brand-700 placeholder:text-brand-200" value={formData.maxCapacity ?? ''} onChange={e => setFormData({ ...formData, maxCapacity: Number(e.target.value) })} min={0} required />
+              <input type="number" className="border rounded-full px-4 py-2 w-full bg-white/80 border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-brand-700 placeholder:text-brand-200" value={formData.maxCapacity ?? ''} onChange={e => setFormData({ ...formData, maxCapacity: Number(e.target.value) })} min={0} />
               <p className="text-xs text-brand-400 mt-1 ml-2">Insira 0 para capacidade ilimitada.</p>
             </div>
           </div>
@@ -326,27 +329,27 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-2xl relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-700">&times;</button>
+      <div className="bg-white rounded-2xl shadow-lg p-4 lg:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-700 z-10">&times;</button>
         {success ? (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-success mb-4">Evento Criado com Sucesso!</h2>
+          <div className="text-center py-8 lg:py-12">
+            <h2 className="text-xl lg:text-2xl font-bold text-success mb-4">Evento Criado com Sucesso!</h2>
             <p className="text-brand-700">O modal fechará em breve...</p>
           </div>
         ) : (
           <form onSubmit={e => { e.preventDefault(); step === steps.length - 1 ? handleSubmit() : handleNext(); }}>
             {renderStepper()}
-            <h2 className="text-2xl font-bold text-brand-700 mb-6 text-center">{steps[step]}</h2>
-            {error && <div className="bg-danger/20 text-danger font-bold p-3 rounded-lg mb-4 text-center">{error}</div>}
-            <div className="min-h-[250px]">
+            <h2 className="text-lg lg:text-2xl font-bold text-brand-700 mb-4 lg:mb-6 text-center pr-8">{steps[step]}</h2>
+            {error && <div className="bg-danger/20 text-danger font-bold p-3 rounded-lg mb-4 text-center text-sm lg:text-base">{error}</div>}
+            <div className="min-h-[200px] lg:min-h-[250px]">
               {renderStep()}
             </div>
-            <div className="flex justify-between mt-8">
+            <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6 lg:mt-8">
               <button
                 type="button"
                 onClick={handlePrev}
                 disabled={step === 0}
-                className="px-6 py-2 rounded-full font-bold text-brand-700 bg-softpink-100 border border-brand-200 hover:bg-brand-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 lg:px-6 py-2 rounded-full font-bold text-brand-700 bg-softpink-100 border border-brand-200 hover:bg-brand-100 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
               >
                 Anterior
               </button>
@@ -354,7 +357,7 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="px-6 py-2 rounded-full font-bold text-white bg-brand-500 hover:bg-brand-600 transition"
+                  className="px-4 lg:px-6 py-2 rounded-full font-bold text-white bg-brand-500 hover:bg-brand-600 transition text-sm lg:text-base"
                 >
                   Próximo
                 </button>
@@ -363,7 +366,7 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
                   type="button"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="px-6 py-2 rounded-full font-bold text-white bg-success hover:bg-success/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 lg:px-6 py-2 rounded-full font-bold text-white bg-success hover:bg-success/90 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
                 >
                   {loading ? 'A criar...' : 'Criar Evento'}
                 </button>

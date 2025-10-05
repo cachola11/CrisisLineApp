@@ -18,6 +18,7 @@ const eventTypeMeta: Record<string, { icon: string; className: string }> = {
   'Teambuilding': { icon: '🎉', className: 'bg-yellow-100/80 text-yellow-700' },
   'Evento Aberto': { icon: '📢', className: 'bg-pink-100/80 text-pink-700' },
   'Reunião Coordenação': { icon: '💻', className: 'bg-purple-100/80 text-purple-700' },
+  'Reunião Geral': { icon: '👥', className: 'bg-green-100/80 text-green-700' },
 };
 
 const EventManagement: React.FC = () => {
@@ -376,35 +377,36 @@ const EventManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-softpink-100 pb-12">
-      <div className="max-w-6xl mx-auto px-4 pt-8">
-        <div className="flex items-center mb-8">
-          <span className="text-3xl mr-3">📅</span>
-          <h1 className="text-3xl font-extrabold text-brand-700 drop-shadow-sm">Gestão de Eventos</h1>
+      <div className="max-w-6xl mx-auto px-4 pt-4 lg:pt-8">
+        <div className="flex items-center mb-6 lg:mb-8">
+          <span className="text-2xl lg:text-3xl mr-3">📅</span>
+          <h1 className="text-2xl lg:text-3xl font-extrabold text-brand-700 drop-shadow-sm">Gestão de Eventos</h1>
         </div>
         
         {/* Filters and Actions */}
         <div className="flex flex-col gap-4 mb-6">
           {/* Filter Group */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 lg:gap-3">
             <div className="relative">
               <label className="block text-xs font-bold text-brand-700 mb-1 ml-2">Tipo</label>
-              <select value={filterType} onChange={e => setFilterType(e.target.value)} className="rounded-full px-4 py-2 bg-white shadow text-brand-700 border-2 border-brand-200 focus:ring-2 focus:ring-brand-300 appearance-none pr-8">
+              <select value={filterType} onChange={e => setFilterType(e.target.value)} className="rounded-full px-3 lg:px-4 py-2 bg-white shadow text-brand-700 border-2 border-brand-200 focus:ring-2 focus:ring-brand-300 appearance-none pr-6 lg:pr-8 text-sm lg:text-base">
                 <option value="">Todos</option>
                 <option value="Turno">☎️ Turno</option>
                 <option value="Teambuilding">🎉 Teambuilding</option>
                 <option value="Evento Aberto">📢 Evento Aberto</option>
                 <option value="Reunião Coordenação">💻 Reunião</option>
+                <option value="Reunião Geral">👥 Reunião Geral</option>
               </select>
-              <span className="pointer-events-none absolute right-3 top-8 text-brand-400">▼</span>
+              <span className="pointer-events-none absolute right-2 lg:right-3 top-8 text-brand-400 text-xs">▼</span>
             </div>
             <div className="relative">
               <label className="block text-xs font-bold text-brand-700 mb-1 ml-2">Estado</label>
-              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="rounded-full px-4 py-2 bg-white shadow text-brand-700 border-2 border-brand-200 focus:ring-2 focus:ring-brand-300 appearance-none pr-8">
+              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="rounded-full px-3 lg:px-4 py-2 bg-white shadow text-brand-700 border-2 border-brand-200 focus:ring-2 focus:ring-brand-300 appearance-none pr-6 lg:pr-8 text-sm lg:text-base">
                 <option value="">Todos</option>
                 <option value="draft">🟡 Rascunho</option>
                 <option value="published">🟢 Publicado</option>
               </select>
-              <span className="pointer-events-none absolute right-3 top-8 text-brand-400">▼</span>
+              <span className="pointer-events-none absolute right-2 lg:right-3 top-8 text-brand-400 text-xs">▼</span>
             </div>
             <div className="relative">
               <label className="block text-xs font-bold text-brand-700 mb-1 ml-2">Data</label>
@@ -481,35 +483,37 @@ const EventManagement: React.FC = () => {
                 </div>
               </div>
             </div>
-            <button onClick={() => { setFilterType(''); setFilterStatus(''); setFilterDay(''); }} className="self-end rounded-full px-5 py-2 bg-brand-100 text-brand-700 border border-brand-200 shadow hover:bg-brand-200 transition">Limpar</button>
+            <button onClick={() => { setFilterType(''); setFilterStatus(''); setFilterDay(''); }} className="self-end rounded-full px-3 lg:px-5 py-2 bg-brand-100 text-brand-700 border border-brand-200 shadow hover:bg-brand-200 transition text-sm lg:text-base">Limpar</button>
           </div>
           
           {/* Action Group */}
-          <div className="flex items-center justify-end gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-3 lg:gap-4">
             <Switch
               label="Mostrar apenas eventos futuros"
               checked={showOnlyUpcoming}
               onChange={setShowOnlyUpcoming}
             />
-            <button onClick={() => setSelectMode(!selectMode)} className={`rounded-full px-6 py-2 font-bold shadow-lg transition whitespace-nowrap ${selectMode ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-brand-100 text-brand-700 hover:bg-brand-200'}`}>
-              {selectMode ? 'Cancelar Seleção' : 'Modo de Seleção'}
-            </button>
-            <button onClick={() => setShowEventModal(true)} className="rounded-full px-6 py-2 bg-brand-500 text-white font-bold shadow-lg hover:bg-brand-600 transition whitespace-nowrap">➕ Criar Evento</button>
+            <div className="flex flex-col sm:flex-row gap-2 lg:gap-4 w-full sm:w-auto">
+              <button onClick={() => setSelectMode(!selectMode)} className={`rounded-full px-4 lg:px-6 py-2 font-bold shadow-lg transition whitespace-nowrap text-sm lg:text-base ${selectMode ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-brand-100 text-brand-700 hover:bg-brand-200'}`}>
+                {selectMode ? 'Cancelar Seleção' : 'Modo de Seleção'}
+              </button>
+              <button onClick={() => setShowEventModal(true)} className="rounded-full px-4 lg:px-6 py-2 bg-brand-500 text-white font-bold shadow-lg hover:bg-brand-600 transition whitespace-nowrap text-sm lg:text-base">➕ Criar Evento</button>
+            </div>
           </div>
         </div>
         
         {/* Batch Action Bar */}
         {selectMode && (
-          <div className="bg-blue-100 border-2 border-blue-300 rounded-2xl p-4 mb-6 flex items-center gap-4 flex-wrap shadow-lg">
-            <h3 className="text-lg font-bold text-blue-800">
+          <div className="bg-blue-100 border-2 border-blue-300 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-lg">
+            <h3 className="text-base lg:text-lg font-bold text-blue-800">
               {selectedEvents.length} {selectedEvents.length === 1 ? 'evento selecionado' : 'eventos selecionados'}
             </h3>
-            <div className="flex gap-2 flex-wrap">
-              <button onClick={() => handleBatchAction('publish')} disabled={selectedEvents.length === 0} className="px-3 py-1 bg-white text-blue-700 rounded-full shadow font-semibold border border-blue-200 hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed">Publicar</button>
-              <button onClick={() => handleBatchAction('unpublish')} disabled={selectedEvents.length === 0} className="px-3 py-1 bg-white text-blue-700 rounded-full shadow font-semibold border border-blue-200 hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed">Despublicar</button>
-              <button onClick={() => handleBatchAction('assignSupervisor')} disabled={selectedEvents.length === 0} className="px-3 py-1 bg-white text-blue-700 rounded-full shadow font-semibold border-blue-200 hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed">Atribuir Supervisor</button>
-              <button onClick={() => handleBatchAction('reset')} disabled={selectedEvents.length === 0} className="px-3 py-1 bg-white text-orange-700 rounded-full shadow font-semibold border border-orange-200 hover:bg-orange-50 transition disabled:opacity-50 disabled:cursor-not-allowed">Reset Inscrições</button>
-              <button onClick={() => handleBatchAction('delete')} disabled={selectedEvents.length === 0} className="px-3 py-1 bg-white text-danger rounded-full shadow font-semibold border-2 border-red-300 hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed">Eliminar</button>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => handleBatchAction('publish')} disabled={selectedEvents.length === 0} className="px-3 py-1 bg-white text-blue-700 rounded-full shadow font-semibold border border-blue-200 hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-xs lg:text-sm">Publicar</button>
+              <button onClick={() => handleBatchAction('unpublish')} disabled={selectedEvents.length === 0} className="px-3 py-1 bg-white text-blue-700 rounded-full shadow font-semibold border border-blue-200 hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-xs lg:text-sm">Despublicar</button>
+              <button onClick={() => handleBatchAction('assignSupervisor')} disabled={selectedEvents.length === 0} className="px-3 py-1 bg-white text-blue-700 rounded-full shadow font-semibold border-blue-200 hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-xs lg:text-sm">Atribuir Supervisor</button>
+              <button onClick={() => handleBatchAction('reset')} disabled={selectedEvents.length === 0} className="px-3 py-1 bg-white text-orange-700 rounded-full shadow font-semibold border border-orange-200 hover:bg-orange-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-xs lg:text-sm">Reset Inscrições</button>
+              <button onClick={() => handleBatchAction('delete')} disabled={selectedEvents.length === 0} className="px-3 py-1 bg-white text-danger rounded-full shadow font-semibold border-2 border-red-300 hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed text-xs lg:text-sm">Eliminar</button>
             </div>
           </div>
         )}
@@ -517,16 +521,16 @@ const EventManagement: React.FC = () => {
         {/* Event List */}
         <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-glass p-2 sm:p-4 md:p-6">
           {loadingEvents ? (
-            <div className="text-brand-700 text-lg font-semibold flex items-center justify-center py-16">A carregar eventos...</div>
+            <div className="text-brand-700 text-base lg:text-lg font-semibold flex items-center justify-center py-16">A carregar eventos...</div>
           ) : events.length === 0 ? (
             <div className="flex flex-col items-center py-16">
-              <span className="text-6xl mb-4">🗓️</span>
-              <div className="text-xl text-brand-700 font-semibold mb-2">Ainda não existem eventos.</div>
-              <div className="text-brand-400">Clique em "Criar Evento" para adicionar o primeiro!</div>
+              <span className="text-4xl lg:text-6xl mb-4">🗓️</span>
+              <div className="text-lg lg:text-xl text-brand-700 font-semibold mb-2 text-center">Ainda não existem eventos.</div>
+              <div className="text-brand-400 text-center">Clique em "Criar Evento" para adicionar o primeiro!</div>
             </div>
           ) : (
             <div className="w-full overflow-x-auto relative" style={{ maxHeight: '60vh' }}>
-              <table className="w-full min-w-[1200px] divide-y divide-brand-100">
+              <table className="w-full min-w-[1000px] lg:min-w-[1200px] divide-y divide-brand-100">
                 <thead className="bg-gradient-to-r from-brand-100 to-softpink-100 sticky top-0 z-10">
                   <tr>
                     {selectMode && (
@@ -539,14 +543,14 @@ const EventManagement: React.FC = () => {
                         />
                       </th>
                     )}
-                    <th className="px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Título</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Tipo</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Estado</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Início</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Fim</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Inscritos</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Supervisor</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Ações</th>
+                    <th className="px-2 lg:px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Título</th>
+                    <th className="px-2 lg:px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Tipo</th>
+                    <th className="px-2 lg:px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Estado</th>
+                    <th className="px-2 lg:px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Início</th>
+                    <th className="px-2 lg:px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Fim</th>
+                    <th className="px-2 lg:px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Inscritos</th>
+                    <th className="px-2 lg:px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Supervisor</th>
+                    <th className="px-2 lg:px-4 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-brand-50">
@@ -569,88 +573,89 @@ const EventManagement: React.FC = () => {
                           />
                         </td>
                       )}
-                      <td className="px-4 py-3 whitespace-nowrap text-base font-semibold text-brand-800">{ev.title}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-lg">
+                      <td className="px-2 lg:px-4 py-3 whitespace-nowrap text-sm lg:text-base font-semibold text-brand-800">{ev.title}</td>
+                      <td className="px-2 lg:px-4 py-3 whitespace-nowrap text-sm lg:text-lg">
                         {eventTypeMeta[ev.type] ? (
-                          <span className={`inline-block px-3 py-1 rounded-full text-base font-bold shadow-sm ${eventTypeMeta[ev.type].className}`}>
+                          <span className={`inline-block px-2 lg:px-3 py-1 rounded-full text-xs lg:text-base font-bold shadow-sm ${eventTypeMeta[ev.type].className}`}>
                             {eventTypeMeta[ev.type].icon} {ev.type}
                           </span>
                         ) : (
-                          <span className="inline-block px-3 py-1 rounded-full text-base font-bold shadow-sm bg-gray-100 text-gray-700">
+                          <span className="inline-block px-2 lg:px-3 py-1 rounded-full text-xs lg:text-base font-bold shadow-sm bg-gray-100 text-gray-700">
                             {ev.type}
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
+                      <td className="px-2 lg:px-4 py-4 whitespace-nowrap">
+                        <span className={`inline-block px-2 lg:px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
                           ev.status === 'published' ? 'bg-success text-white' : 'bg-warning text-brand-900'
                         }`}>
                           {ev.status === 'published' ? '🟢 Publicado' : '🟡 Rascunho'}
                         </span>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-brand-700 font-mono">{
+                      <td className="px-2 lg:px-4 py-4 whitespace-nowrap text-brand-700 font-mono text-xs lg:text-sm">{
                         ev.startTime ? formatDate(new Date(ev.startTime), 'dd/MM/yyyy, HH:mm') : ''
                       }</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-brand-700 font-mono">{
+                      <td className="px-2 lg:px-4 py-4 whitespace-nowrap text-brand-700 font-mono text-xs lg:text-sm">{
                         ev.endTime ? formatDate(new Date(ev.endTime), 'dd/MM/yyyy, HH:mm') : ''
                       }</td>
-                      <td className="px-4 py-4 whitespace-nowrap text-base font-semibold text-brand-800">
+                      <td className="px-2 lg:px-4 py-4 whitespace-nowrap text-sm lg:text-base font-semibold text-brand-800">
                         {typeof signUpCounts[ev.id] === 'undefined' ? (
-                          <span className="inline-flex items-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-brand-500"></span>...</span>
+                          <span className="inline-flex items-center gap-2"><span className="animate-spin rounded-full h-3 w-3 lg:h-4 lg:w-4 border-t-2 border-b-2 border-brand-500"></span>...</span>
                         ) : (
                           ev.maxCapacity === 0 ? 'Ilimitado' : `${signUpCounts[ev.id]} / ${ev.maxCapacity}`
                         )}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
+                      <td className="px-2 lg:px-4 py-4 whitespace-nowrap">
                         {ev.supervisor ? (
-                          <span className="inline-block px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-green-200/80 text-green-800">
+                          <span className="inline-block px-2 lg:px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-green-200/80 text-green-800">
                             {ev.supervisor.emoji}{' '}
                             {ev.supervisor.name || (allUsers.find(u => u.id === ev.supervisor.id)?.idNumber) || '...'}
                           </span>
                         ) : (
-                          <span className="inline-block px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-gray-200/80 text-gray-800">
+                          <span className="inline-block px-2 lg:px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-gray-200/80 text-gray-800">
                             N/A
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="flex flex-wrap gap-2">
+                      <td className="px-2 lg:px-4 py-4 whitespace-nowrap">
+                        <div className="flex flex-wrap gap-1 lg:gap-2">
                           <button
                             onClick={() => handleEdit(ev)}
-                            className="bg-brand-100 text-brand-700 px-3 py-1 rounded-full font-semibold text-sm flex items-center gap-1 hover:bg-brand-200 transition shadow"
+                            className="bg-brand-100 text-brand-700 px-2 lg:px-3 py-1 rounded-full font-semibold text-xs lg:text-sm flex items-center gap-1 hover:bg-brand-200 transition shadow"
                             title="Editar"
                           >
-                            ✏️ Editar
+                            ✏️ <span className="hidden sm:inline">Editar</span>
                           </button>
                           <button
                             onClick={() => handleDelete(ev.id)}
-                            className="bg-danger text-white px-3 py-1 rounded-full font-semibold text-sm flex items-center gap-1 hover:bg-danger/80 transition shadow"
+                            className="bg-danger text-white px-2 lg:px-3 py-1 rounded-full font-semibold text-xs lg:text-sm flex items-center gap-1 hover:bg-danger/80 transition shadow"
                             title="Eliminar"
                           >
-                            🗑️ Eliminar
+                            🗑️ <span className="hidden sm:inline">Eliminar</span>
                           </button>
                           {ev.status === 'draft' ? (
                             <button
                               onClick={() => handlePublish(ev.id)}
-                              className="bg-success text-white px-3 py-1 rounded-full font-semibold text-sm flex items-center gap-1 hover:bg-success/80 transition shadow"
+                              className="bg-success text-white px-2 lg:px-3 py-1 rounded-full font-semibold text-xs lg:text-sm flex items-center gap-1 hover:bg-success/80 transition shadow"
                               title="Publicar"
                             >
-                              🟢 Publicar
+                              🟢 <span className="hidden sm:inline">Publicar</span>
                             </button>
                           ) : (
                             <button
                               onClick={() => handleUnpublish(ev.id)}
-                              className="bg-warning text-brand-900 px-3 py-1 rounded-full font-semibold text-sm flex items-center gap-1 hover:bg-warning/80 transition shadow"
+                              className="bg-warning text-brand-900 px-2 lg:px-3 py-1 rounded-full font-semibold text-xs lg:text-sm flex items-center gap-1 hover:bg-warning/80 transition shadow"
                               title="Despublicar"
                             >
-                              🟡 Despublicar
+                              🟡 <span className="hidden sm:inline">Despublicar</span>
                             </button>
                           )}
                           <button
-                            className="px-3 py-1 bg-brand-100 text-brand-700 rounded-full shadow hover:bg-brand-200 transition-all duration-200 text-xs font-semibold border border-brand-200"
+                            className="px-2 lg:px-3 py-1 bg-brand-100 text-brand-700 rounded-full shadow hover:bg-brand-200 transition-all duration-200 text-xs font-semibold border border-brand-200"
                             onClick={() => { setForceSignUpModalOpen(true); setForceSignUpEvent(ev); }}
                           >
-                            Forçar Inscrição
+                            <span className="hidden sm:inline">Forçar Inscrição</span>
+                            <span className="sm:hidden">Forçar</span>
                           </button>
                           {signUpError && signUpLoading === null && (
                             <div className="text-danger text-xs mt-1">{signUpError}</div>

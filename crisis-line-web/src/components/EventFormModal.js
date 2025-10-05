@@ -209,7 +209,7 @@ export default function EventFormModal({ isVisible, onClose, eventToEdit }) {
                     eventType,
                     startTime,
                     endTime,
-                    maxCapacity: maxCapacity ? parseInt(maxCapacity) : null,
+                    maxCapacity: maxCapacity !== '' ? parseInt(maxCapacity) : null,
                     // coordinatorUid is already set from AuthContext, no need to update unless it changes
                 };
                 await updateEvent(eventId, eventData);
@@ -225,7 +225,7 @@ export default function EventFormModal({ isVisible, onClose, eventToEdit }) {
                         title,
                         description,
                         eventType,
-                        maxCapacity: maxCapacity ? parseInt(maxCapacity) : null, // Base maxCapacity for recurring
+                        maxCapacity: maxCapacity !== '' ? parseInt(maxCapacity) : null, // Base maxCapacity for recurring
                     };
                     const createdCount = await generateRecurringTurnos(
                         baseEventData,
@@ -246,7 +246,7 @@ export default function EventFormModal({ isVisible, onClose, eventToEdit }) {
                         eventType,
                         startTime,
                         endTime,
-                        maxCapacity: maxCapacity ? parseInt(maxCapacity) : null,
+                        maxCapacity: maxCapacity !== '' ? parseInt(maxCapacity) : null,
                         coordinatorUid: coordinatorUid,
                         status: 'draft', // New single events start as draft
                     };
@@ -305,6 +305,7 @@ export default function EventFormModal({ isVisible, onClose, eventToEdit }) {
                         <Picker.Item label="Teambuilding" value="Teambuilding" />
                         <Picker.Item label="Reunião" value="Reunião" />
                         <Picker.Item label="Evento Aberto" value="Evento Aberto" />
+                        <Picker.Item label="Reunião Geral" value="Reunião Geral" />
                     </Picker>
 
                     <Text style={styles.label}>Capacidade Máxima (0 ou vazio para ilimitado):</Text>
