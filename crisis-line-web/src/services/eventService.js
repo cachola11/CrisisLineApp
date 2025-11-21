@@ -386,8 +386,8 @@ export const getEventsForUser = async (userRole) => {
             conditions.push(where('status', '==', 'published'));
             break;
         case 'Voluntário':
-            // Voluntário: allow read: if resource.data.status == 'published' && resource.data.eventType in ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Geral']; [cite: 265]
-            conditions.push(where('status', '==', 'published'));
+            // Voluntário: allow read: if resource.data.status in ['draft', 'published'] && resource.data.eventType in ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Geral']; [cite: 265]
+            conditions.push(where('status', 'in', ['draft', 'published']));
             conditions.push(where('eventType', 'in', ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Geral']));
             break;
         case 'Coordenador':
