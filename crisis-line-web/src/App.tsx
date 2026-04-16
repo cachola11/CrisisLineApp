@@ -24,8 +24,9 @@ const RoleRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[] }>
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <div className="h-10 w-10 rounded-full border-[3px] border-brand-200 border-t-brand-500 animate-spin" />
+        <p className="text-sm text-gray-400 font-medium">{translations.common.loading}</p>
       </div>
     );
   }
@@ -43,12 +44,15 @@ const App: React.FC = () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <Router>
-            <div className="min-h-screen bg-gray-100">
+            <div className="min-h-screen bg-white">
               <Navigation />
-              <main className="container mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 py-2 sm:py-4 lg:py-6">
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-                </div>}>
+              <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                <Suspense fallback={
+                  <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+                    <div className="h-10 w-10 rounded-full border-[3px] border-brand-200 border-t-brand-500 animate-spin" />
+                    <p className="text-sm text-gray-400 font-medium">{translations.common.loading}</p>
+                  </div>
+                }>
                   <Routes>
                     {/* Public routes */}
                     <Route path="/" element={<Home />} />
@@ -93,12 +97,14 @@ const App: React.FC = () => {
 
 
                     {/* 404 route */}
-                    <Route path="*" element={<div className="flex items-center justify-center min-h-screen">
-                      <div className="text-center">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-                        <p className="text-gray-600">{translations.common.pageNotFound}</p>
+                    <Route path="*" element={
+                      <div className="flex items-center justify-center min-h-[50vh] px-4">
+                        <div className="w-full max-w-md rounded-xl border border-gray-100 bg-white shadow-card p-10 text-center">
+                          <p className="text-5xl font-bold text-brand-200 mb-3">404</p>
+                          <p className="text-sm text-gray-600">{translations.common.pageNotFound}</p>
+                        </div>
                       </div>
-                    </div>} />
+                    } />
                   </Routes>
                 </Suspense>
               </main>

@@ -5,11 +5,19 @@ import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase/config';
 import { deleteUser } from '../services/userService';
 
+const roleBadgeClass: Record<string, string> = {
+  Administrador: 'bg-rose-50 text-rose-700 border-rose-200',
+  Coordenador: 'bg-violet-50 text-violet-700 border-violet-200',
+  Voluntário: 'bg-blue-50 text-blue-700 border-blue-200',
+  Visitante: 'bg-gray-50 text-gray-600 border-gray-200',
+};
+
 const Admin: React.FC = () => {
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [passwordModalUser, setPasswordModalUser] = useState<any | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,11 +31,12 @@ const Admin: React.FC = () => {
     setError(null);
     try {
       const querySnapshot = await getDocs(collection(db, 'users'));
-      const usersList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      // Sort users by ID in ascending order
-      const sortedUsers = usersList.sort((a, b) => a.idNumber.localeCompare(b.idNumber));
+      const usersList = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      const sortedUsers = usersList.sort((a, b) =>
+        (a.idNumber || '').localeCompare(b.idNumber || '', undefined, { numeric: true })
+      );
       setUsers(sortedUsers);
-    } catch (err) {
+    } catch {
       setError('Erro ao carregar utilizadores');
     } finally {
       setLoading(false);
@@ -38,12 +47,18 @@ const Admin: React.FC = () => {
     if (!showCreateUser) fetchUsers();
   }, [showCreateUser]);
 
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
       await updateDoc(doc(db, 'users', userId), { role: newRole });
-      setUsers(users => users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-    } catch (err) {
-      alert('Erro ao atualizar função do utilizador');
+      setUsers(prev => prev.map(u => (u.id === userId ? { ...u, role: newRole } : u)));
+    } catch {
+      setError('Erro ao atualizar função do utilizador');
     }
   };
 
@@ -61,22 +76,17 @@ const Admin: React.FC = () => {
     setPasswordError(null);
   };
 
-  const handleOpenDeleteModal = (user: any) => {
-    setDeleteModalUser(user);
-  };
-
-  const handleCloseDeleteModal = () => {
-    setDeleteModalUser(null);
-  };
+  const handleOpenDeleteModal = (user: any) => setDeleteModalUser(user);
+  const handleCloseDeleteModal = () => setDeleteModalUser(null);
 
   const handleDeleteUser = async () => {
     if (!deleteModalUser) return;
-    
     setDeleteLoading(true);
     try {
       await deleteUser(deleteModalUser.id);
-      setUsers(users => users.filter(u => u.id !== deleteModalUser.id));
+      setUsers(prev => prev.filter(u => u.id !== deleteModalUser.id));
       setDeleteModalUser(null);
+      setToast('Utilizador eliminado.');
     } catch (err: any) {
       setError(err.message || 'Erro ao eliminar utilizador');
     } finally {
@@ -96,27 +106,20 @@ const Admin: React.FC = () => {
     setPasswordLoading(true);
     setPasswordError(null);
     try {
-      // Get Firebase ID token for the current user
-      const currentUser = (await import('firebase/auth')).getAuth().currentUser;
+      const { getAuth } = await import('firebase/auth');
+      const currentUser = getAuth().currentUser;
       if (!currentUser) throw new Error('Utilizador não autenticado.');
       const idToken = await currentUser.getIdToken();
-      // Call backend Cloud Function
       const response = await fetch('https://us-central1-crisislineapp.cloudfunctions.net/adminResetUserPassword', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          uid: passwordModalUser.id, // Firestore doc id is the UID
-          newPassword,
-        }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ uid: passwordModalUser.id, newPassword }),
       });
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText || 'Erro ao definir nova palavra-passe.');
       }
-      alert('Palavra-passe definida com sucesso!');
+      setToast('Palavra-passe atualizada com sucesso.');
       handleClosePasswordModal();
     } catch (err: any) {
       setPasswordError(err.message || 'Erro ao definir nova palavra-passe.');
@@ -126,103 +129,127 @@ const Admin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-softpink-100 pb-12">
-      <div className="max-w-6xl mx-auto px-4 pt-4 lg:pt-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-2xl lg:text-3xl">🛠️</span>
-              <h1 className="text-2xl lg:text-3xl font-extrabold text-brand-700">{translations.pages.admin.title}</h1>
-            </div>
-            <p className="text-brand-400 text-sm lg:text-base font-medium ml-1">Gerir utilizadores e configurações da plataforma</p>
-          </div>
-          <button
-            onClick={() => setShowCreateUser(true)}
-            className="flex items-center gap-2 px-4 lg:px-5 py-2 bg-brand-500 text-white rounded-full font-bold shadow hover:bg-brand-600 transition text-sm lg:text-base mt-2 sm:mt-0"
-          >
-            <span className="text-lg lg:text-xl">➕</span> {translations.userManagement.createUser}
-          </button>
+    <div className="animate-fade-in space-y-6">
+      {toast && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-sm">
+          {toast}
         </div>
-        {showCreateUser ? (
-          <CreateUser
-            onSuccess={() => setShowCreateUser(false)}
-            onCancel={() => setShowCreateUser(false)}
-          />
-        ) : (
-          <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-glass p-4 lg:p-8 max-w-5xl mx-auto mt-6">
-            <p className="text-brand-500 text-sm lg:text-lg mb-6 font-medium">
-              {translations.pages.admin.description}
-            </p>
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={fetchUsers}
-                className="px-4 lg:px-5 py-2 bg-brand-500 text-white rounded-full shadow hover:bg-brand-600 transition text-sm lg:text-base font-semibold"
-              >
-                {'Atualizar'}
-              </button>
+      )}
+
+      {showCreateUser ? (
+        <CreateUser onSuccess={() => setShowCreateUser(false)} onCancel={() => setShowCreateUser(false)} />
+      ) : (
+      <div className="rounded-xl border border-gray-100 shadow-card overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-brand-500 to-brand-400 gap-4 flex-wrap">
+          <div>
+            <h1 className="text-lg font-bold text-white">{translations.pages.admin.title}</h1>
+            <p className="text-xs text-white/70 mt-0.5">Gerir utilizadores e configurações da plataforma</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={fetchUsers}
+              disabled={loading}
+              className="px-3 py-1.5 rounded-lg bg-white/15 text-white text-xs font-semibold border border-white/25 hover:bg-white/25 transition-colors disabled:opacity-50"
+            >
+              Atualizar
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCreateUser(true)}
+              className="px-3 py-1.5 rounded-lg bg-white text-brand-600 text-xs font-semibold shadow-sm hover:bg-gray-50 transition-colors"
+            >
+              + {translations.userManagement.createUser}
+            </button>
+          </div>
+        </div>
+
+          <div className="bg-white">
+            <div className="px-5 py-3 border-b border-gray-100">
+              <p className="text-sm text-gray-500">{translations.pages.admin.description}</p>
             </div>
+
             {loading ? (
-              <div className="flex justify-center items-center py-16">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-500"></div>
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <div className="h-8 w-8 rounded-full border-[3px] border-brand-200 border-t-brand-500 animate-spin" />
+                <p className="text-sm text-gray-400">A carregar utilizadores...</p>
               </div>
             ) : error ? (
-              <div className="text-danger text-sm lg:text-base font-semibold text-center py-4">{error}</div>
+              <div className="px-5 py-8 text-center text-sm font-medium text-red-600">{error}</div>
             ) : (
-              <div className="overflow-x-auto rounded-2xl border border-brand-100 shadow-lg">
-                <table className="min-w-full divide-y divide-brand-100 rounded-2xl bg-white/90">
-                  <thead className="bg-gradient-to-r from-brand-100 to-softpink-100 sticky top-0 z-10">
+              <div className="overflow-x-auto" style={{ maxHeight: '65vh' }}>
+                <table className="w-full min-w-[640px]">
+                  <thead className="bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
                     <tr>
-                      <th className="px-3 lg:px-6 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider"><span className="mr-1">🆔</span>{translations.auth.idNumber}</th>
-                      <th className="px-3 lg:px-6 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider"><span className="mr-1">🧑‍💼</span>{translations.auth.role}</th>
-                      <th className="px-3 lg:px-6 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider"><span className="mr-1">🟢</span>Estado</th>
-                      <th className="px-3 lg:px-6 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider"><span className="mr-1">🔒</span>Palavra-passe</th>
-                      <th className="px-3 lg:px-6 py-3 text-left text-xs font-bold text-brand-900 uppercase tracking-wider"><span className="mr-1">🗑️</span>Ações</th>
+                      <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                        {translations.auth.idNumber}
+                      </th>
+                      <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                        {translations.auth.role}
+                      </th>
+                      <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                        Estado
+                      </th>
+                      <th className="px-4 py-3 text-right text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                        Ações
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-brand-100">
-                    {users.map((u, idx) => (
-                      <tr key={u.id} className={`transition hover:bg-softpink-200/60 ${idx % 2 === 0 ? 'bg-softpink-50/60' : 'bg-white/80'}`}>
-                        <td className="px-3 lg:px-6 py-3 whitespace-nowrap text-sm lg:text-lg font-semibold text-brand-800 align-middle">{u.idNumber}</td>
-                        <td className="px-3 lg:px-6 py-3 whitespace-nowrap align-middle">
-                          <span className={`inline-block px-0 py-0 rounded-full text-xs font-bold shadow-sm ${
-                            u.role === 'Administrador' ? 'bg-[#D29674]/20 text-[#D29674]' :
-                            u.role === 'Coordenador' ? 'bg-[#EBC7A1]/80 text-[#b97b54]' :
-                            u.role === 'Voluntário' ? 'bg-[#BFD8E6]/80 text-[#3b5c6b]' :
-                            'bg-[#E5E7EB] text-gray-700'
-                          }`}>
-                            <select
-                              value={u.role}
-                              onChange={e => handleRoleChange(u.id, e.target.value)}
-                              className="border-none bg-transparent font-bold px-2 lg:px-3 py-1 rounded-full focus:ring-2 focus:ring-brand-400 focus:outline-none text-xs lg:text-sm"
-                            >
-                              {Object.keys(translations.auth.roles).map(role => (
-                                <option key={role} value={role}>{translations.auth.roles[role as keyof typeof translations.auth.roles]}</option>
-                              ))}
-                            </select>
-                          </span>
+                  <tbody className="divide-y divide-gray-50">
+                    {users.map(u => (
+                      <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-3">
+                          <span className="text-sm font-semibold text-gray-800 font-mono">{u.idNumber}</span>
+                          {u.name && <p className="text-xs text-gray-400 mt-0.5">{u.name}</p>}
                         </td>
-                        <td className="px-3 lg:px-6 py-3 whitespace-nowrap align-middle">
-                          <span className={`inline-block px-2 lg:px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
-                            u.online ? 'bg-success/20 text-success' : 'bg-danger/20 text-danger'
-                          }`}>
+                        <td className="px-4 py-3">
+                          <select
+                            value={u.role}
+                            onChange={e => handleRoleChange(u.id, e.target.value)}
+                            className={`text-xs font-semibold rounded-lg border px-2 py-1.5 focus:ring-2 focus:ring-brand-100 focus:border-brand-400 outline-none cursor-pointer ${roleBadgeClass[u.role] || roleBadgeClass.Visitante}`}
+                          >
+                            {Object.keys(translations.auth.roles).map(role => (
+                              <option key={role} value={role}>
+                                {translations.auth.roles[role as keyof typeof translations.auth.roles]}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
+                              u.online
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : 'bg-gray-50 text-gray-500 border-gray-200'
+                            }`}
+                          >
+                            <span className={`h-1.5 w-1.5 rounded-full ${u.online ? 'bg-emerald-400' : 'bg-gray-300'}`} />
                             {u.online ? 'Online' : 'Offline'}
                           </span>
                         </td>
-                        <td className="px-3 lg:px-6 py-3 whitespace-nowrap align-middle">
-                          <button
-                            className="flex items-center gap-1 px-2 lg:px-3 py-1 bg-brand-100 text-brand-700 rounded-full shadow hover:bg-brand-200 transition-all duration-200 text-xs font-semibold border border-brand-200"
-                            onClick={() => handleOpenPasswordModal(u)}
-                          >
-                            <span className="text-sm lg:text-base">🔑</span> <span className="hidden sm:inline">Definir Nova Palavra-passe</span><span className="sm:hidden">Nova Passe</span>
-                          </button>
-                        </td>
-                        <td className="px-3 lg:px-6 py-3 whitespace-nowrap align-middle">
-                          <button
-                            className="flex items-center gap-1 px-2 lg:px-3 py-1 bg-red-100 text-red-700 rounded-full shadow hover:bg-red-200 transition-all duration-200 text-xs font-semibold border border-red-200"
-                            onClick={() => handleOpenDeleteModal(u)}
-                          >
-                            <span className="text-sm lg:text-base">🗑️</span> <span className="hidden sm:inline">Eliminar</span><span className="sm:hidden">Del</span>
-                          </button>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              title="Definir palavra-passe"
+                              onClick={() => handleOpenPasswordModal(u)}
+                              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              title="Eliminar utilizador"
+                              onClick={() => handleOpenDeleteModal(u)}
+                              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -230,92 +257,131 @@ const Admin: React.FC = () => {
                 </table>
               </div>
             )}
+
+            {!loading && !error && (
+              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
+                {users.length} utilizador{users.length === 1 ? '' : 'es'}
+              </div>
+            )}
           </div>
-        )}
-        {/* Password Modal */}
-        {passwordModalUser && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 animate-fadeIn p-4">
-            <div className="bg-white rounded-2xl shadow-lg border-2 border-[#D29674] w-full max-w-sm max-h-[90vh] overflow-y-auto flex flex-col items-center">
-              <span className="text-3xl lg:text-4xl mb-2 text-[#D29674] mt-6 lg:mt-8">🔒</span>
-              <h2 className="text-lg lg:text-xl font-bold text-brand-700 text-center mb-4 px-6">Definir nova palavra-passe para utilizador {passwordModalUser.idNumber}</h2>
-              <div className="px-6 py-6 flex flex-col items-center w-full">
-                <label htmlFor="newPassword" className="block text-sm lg:text-lg font-semibold text-brand-700 w-full text-center mb-1">Nova palavra-passe</label>
+      </div>
+      )}
+
+      {/* Password modal */}
+      {passwordModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/25 backdrop-blur-sm" onClick={handleClosePasswordModal} />
+          <div className="relative bg-white rounded-xl shadow-2xl border border-gray-100 w-full max-w-sm animate-scale-in overflow-hidden">
+            <div className="px-5 py-4 bg-gradient-to-r from-brand-500 to-brand-400">
+              <h2 className="text-sm font-bold text-white">Nova palavra-passe</h2>
+              <p className="text-xs text-white/70 mt-0.5 font-mono">{passwordModalUser.idNumber}</p>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Nova palavra-passe
+                </label>
                 <input
                   id="newPassword"
                   type="password"
-                  className="mt-2 block w-full rounded-xl border border-brand-200 shadow-sm focus:border-[#D29674] focus:ring-2 focus:ring-[#D29674]/20 bg-white text-brand-700 placeholder:text-brand-200 text-sm lg:text-base py-3 px-4 mb-3"
-                  placeholder="Nova palavra-passe"
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   disabled={passwordLoading}
+                  className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-300 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:bg-white outline-none transition-all"
+                  placeholder="••••••••"
                 />
-                <label htmlFor="confirmPassword" className="block text-sm lg:text-lg font-semibold text-brand-700 w-full text-center mb-1">Confirmar palavra-passe</label>
+              </div>
+              <div>
+                <label htmlFor="confirmPasswordAdmin" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Confirmar
+                </label>
                 <input
-                  id="confirmPassword"
+                  id="confirmPasswordAdmin"
                   type="password"
-                  className="mt-2 block w-full rounded-xl border border-brand-200 shadow-sm focus:border-[#D29674] focus:ring-2 focus:ring-[#D29674]/20 bg-white text-brand-700 placeholder:text-brand-200 text-sm lg:text-base py-3 px-4 mb-3"
-                  placeholder="Confirmar palavra-passe"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   disabled={passwordLoading}
+                  className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-300 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:bg-white outline-none transition-all"
+                  placeholder="••••••••"
                 />
               </div>
-              {passwordError && <div className="text-danger text-sm mb-3 text-center px-6">{passwordError}</div>}
-              <div className="flex flex-col gap-2 w-full px-6 pb-6">
+              {passwordError && <p className="text-xs text-red-600 font-medium text-center">{passwordError}</p>}
+              <div className="flex gap-2">
                 <button
-                  className="w-full px-4 py-2 rounded-lg bg-[#D29674] text-white font-bold shadow hover:bg-[#b97b54] transition text-sm lg:text-base"
-                  onClick={handleSetPassword}
-                  disabled={passwordLoading}
-                >
-                  {passwordLoading ? 'A definir...' : 'Definir'}
-                </button>
-                <button
-                  className="w-full px-4 py-2 rounded-lg text-[#D29674] font-bold bg-transparent hover:bg-[#f7ede7] transition text-sm lg:text-base"
+                  type="button"
                   onClick={handleClosePasswordModal}
                   disabled={passwordLoading}
+                  className="flex-1 px-4 py-2 rounded-xl text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
                   Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSetPassword}
+                  disabled={passwordLoading}
+                  className="flex-1 px-4 py-2 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-all disabled:opacity-50"
+                >
+                  {passwordLoading ? (
+                    <span className="inline-flex items-center gap-2 justify-center">
+                      <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      A guardar...
+                    </span>
+                  ) : (
+                    'Guardar'
+                  )}
                 </button>
               </div>
             </div>
           </div>
-        )}
-        {/* Delete Confirmation Modal */}
-        {deleteModalUser && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 animate-fadeIn p-4">
-            <div className="bg-white rounded-2xl shadow-lg border-2 border-red-500 w-full max-w-sm max-h-[90vh] overflow-y-auto flex flex-col items-center">
-              <span className="text-3xl lg:text-4xl mb-2 text-red-500 mt-6 lg:mt-8">⚠️</span>
-              <h2 className="text-lg lg:text-xl font-bold text-brand-700 text-center mb-4 px-6">Confirmar Eliminação</h2>
-              <div className="px-6 py-6 flex flex-col items-center w-full">
-                <p className="text-sm lg:text-base text-brand-700 text-center mb-4">
-                  Tem a certeza que pretende eliminar o utilizador <strong>{deleteModalUser.idNumber}</strong>?
-                </p>
-                <p className="text-xs lg:text-sm text-red-600 text-center mb-4">
-                  Esta ação não pode ser desfeita. Apenas o utilizador será eliminado - não serão afetados outros dados.
-                </p>
+        </div>
+      )}
+
+      {/* Delete modal */}
+      {deleteModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/25 backdrop-blur-sm" onClick={handleCloseDeleteModal} />
+          <div className="relative bg-white rounded-xl shadow-2xl border border-gray-100 w-full max-w-sm animate-scale-in overflow-hidden">
+            <div className="p-6">
+              <div className="h-10 w-10 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
               </div>
-              <div className="flex flex-col gap-2 w-full px-6 pb-6">
-                <button
-                  className="w-full px-4 py-2 rounded-lg bg-red-500 text-white font-bold shadow hover:bg-red-600 transition text-sm lg:text-base"
-                  onClick={handleDeleteUser}
-                  disabled={deleteLoading}
-                >
-                  {deleteLoading ? 'A eliminar...' : 'Eliminar Utilizador'}
-                </button>
-                <button
-                  className="w-full px-4 py-2 rounded-lg text-red-500 font-bold bg-transparent hover:bg-red-50 transition text-sm lg:text-base"
-                  onClick={handleCloseDeleteModal}
-                  disabled={deleteLoading}
-                >
-                  Cancelar
-                </button>
-              </div>
+              <h2 className="text-base font-bold text-gray-800 mb-2">Eliminar utilizador</h2>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Tem a certeza que pretende eliminar <strong className="text-gray-800 font-mono">{deleteModalUser.idNumber}</strong>? Esta ação não pode ser desfeita.
+              </p>
+            </div>
+            <div className="flex gap-2 px-6 pb-6">
+              <button
+                type="button"
+                onClick={handleCloseDeleteModal}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2 rounded-xl text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-all disabled:opacity-50"
+              >
+                {deleteLoading ? (
+                  <span className="inline-flex items-center gap-2 justify-center">
+                    <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    A eliminar...
+                  </span>
+                ) : (
+                  'Eliminar'
+                )}
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Admin; 
+export default Admin;

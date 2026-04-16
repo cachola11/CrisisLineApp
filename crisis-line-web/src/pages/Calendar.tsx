@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { addDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameDay, isSameMonth, format, isThisWeek } from 'date-fns';
+import { addDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameDay, isSameMonth, format, startOfDay } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { useAuth } from '../context/AuthContext';
 import { getEventsForUser, getSignUpsForEvent, signUpUserToEvent, cancelSignUpForEvent, getAllEventSignUps } from '../services/eventService';
 import { getAllUsers } from '../services/userService';
 
-const WEEK_DAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+const WEEK_DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-// Helper component for supervisor display
-const SupervisorInfo: React.FC<{ supervisor: any, users: any[] }> = ({ supervisor, users }) => {
+const EVENT_STYLES: Record<string, { dot: string; bg: string; text: string; border: string; icon: string }> = {
+  'Turno':              { dot: 'bg-blue-500',   bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-l-blue-400',   icon: '☎️' },
+  'Teambuilding':       { dot: 'bg-amber-500',  bg: 'bg-amber-50',  text: 'text-amber-700',  border: 'border-l-amber-400',  icon: '🎉' },
+  'Evento Aberto':      { dot: 'bg-pink-500',   bg: 'bg-pink-50',   text: 'text-pink-700',   border: 'border-l-pink-400',   icon: '📢' },
+  'Reunião Geral':      { dot: 'bg-emerald-500',bg: 'bg-emerald-50',text: 'text-emerald-700', border: 'border-l-emerald-400',icon: '👥' },
+  'Reunião Coordenação':{ dot: 'bg-violet-500', bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-l-violet-400', icon: '💻' },
+};
+
+const getEventStyle = (type: string) => EVENT_STYLES[type] || { dot: 'bg-gray-500', bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-l-gray-400', icon: '📌' };
+
+const SupervisorInfo: React.FC<{ supervisor: any; users: any[] }> = ({ supervisor, users }) => {
   if (!supervisor || (!supervisor.id && !supervisor.name)) return null;
 
   let displayName = supervisor.name;
@@ -18,13 +27,24 @@ const SupervisorInfo: React.FC<{ supervisor: any, users: any[] }> = ({ superviso
   }
 
   return (
-    <div className="mt-1">
-      <span className="bg-success/20 text-success-700 rounded px-1.5 py-0.5 text-xs font-semibold border border-success-300 flex items-center gap-1">
-        {supervisor.emoji} {displayName}
-      </span>
-    </div>
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-1.5 py-0.5">
+      {supervisor.emoji && <span>{supervisor.emoji}</span>}
+      {displayName}
+    </span>
   );
 };
+
+const ChevronLeft = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+  </svg>
+);
+
+const ChevronRight = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+  </svg>
+);
 
 const Calendar: React.FC = () => {
   const { user } = useAuth();
@@ -38,33 +58,26 @@ const Calendar: React.FC = () => {
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch all events and sign-ups
   useEffect(() => {
     const fetchData = async () => {
       if (!user) {
         setLoading(false);
         return;
       }
-      
       try {
         console.log('Fetching calendar data for user role:', user.role);
-        
         const [userEvents, allSignUps, users] = await Promise.all([
           getEventsForUser(user.role),
           getAllEventSignUps(),
           getAllUsers()
         ]);
-        
         console.log('Calendar data fetched successfully:', {
           events: userEvents.length,
           signUps: allSignUps.length,
           users: users.length
         });
-        
         setEvents(userEvents);
         setAllUsers(users);
-        
-        // Build signUpsMap: { [eventId]: signUp[] }
         const signUpsObj: { [eventId: string]: any[] } = {};
         for (const su of allSignUps) {
           if (!signUpsObj[su.eventId]) signUpsObj[su.eventId] = [];
@@ -75,7 +88,6 @@ const Calendar: React.FC = () => {
       } catch (error) {
         console.error('Error fetching calendar data:', error);
         setLoading(false);
-        // Set empty arrays to prevent infinite loading
         setEvents([]);
         setAllUsers([]);
         setSignUpsMap({});
@@ -84,7 +96,6 @@ const Calendar: React.FC = () => {
     fetchData();
   }, [user]);
 
-  // Calendar grid logic
   const today = new Date();
   const monthStart = startOfMonth(selectedDate);
   const monthEnd = endOfMonth(monthStart);
@@ -97,47 +108,29 @@ const Calendar: React.FC = () => {
     day = addDays(day, 1);
   }
 
-  // Events for the current week that the user is signed up for
-  const userWeekEvents = user
+  const todayStart = startOfDay(new Date());
+  const userUpcomingEvents = user
     ? events.filter(ev => {
         const evDate = new Date(ev.startTime);
         const signUps = signUpsMap[ev.id] || [];
-        return isThisWeek(evDate, { weekStartsOn: 0 }) && signUps.some(su => su.userId === user.uid);
-      }).sort((a, b) => {
-        // Sort events by startTime in ascending order (earliest first)
-        const timeA = new Date(a.startTime).getTime();
-        const timeB = new Date(b.startTime).getTime();
-        return timeA - timeB;
-      })
+        return evDate >= todayStart && signUps.some(su => su.userId === user.uid);
+      }).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
     : [];
 
-  // Events for a given day
   const getEventsForDay = (date: Date) => {
-    const dayEvents = events.filter(ev => isSameDay(new Date(ev.startTime), date));
-    // Sort events by startTime in ascending order (earliest first)
-    return dayEvents.sort((a, b) => {
-      const timeA = new Date(a.startTime).getTime();
-      const timeB = new Date(b.startTime).getTime();
-      return timeA - timeB;
-    });
+    return events
+      .filter(ev => isSameDay(new Date(ev.startTime), date))
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
   };
 
-  // Handle day click
   const handleDayClick = (date: Date) => {
     setSelectedDate(date);
-    const dayEvents = getEventsForDay(date);
-    // Sort events by startTime in ascending order (earliest first)
-    const sortedDayEvents = dayEvents.sort((a, b) => {
-      const timeA = new Date(a.startTime).getTime();
-      const timeB = new Date(b.startTime).getTime();
-      return timeA - timeB;
-    });
+    const sortedDayEvents = getEventsForDay(date);
     setModalDayEvents(sortedDayEvents);
     setModalOpen(true);
     setSignUpError(null);
   };
 
-  // Sign up/cancel logic for modal
   const handleSignUp = async (event: any) => {
     if (!user) return;
     setSignUpLoading(event.id);
@@ -152,6 +145,7 @@ const Calendar: React.FC = () => {
       setSignUpLoading(null);
     }
   };
+
   const handleCancelSignUp = async (event: any) => {
     if (!user) return;
     setSignUpLoading(event.id);
@@ -169,10 +163,10 @@ const Calendar: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-softpink-100">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
-          <span className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-brand-500"></span>
-          <span className="text-brand-700 text-xl font-bold">A carregar calendário...</span>
+          <div className="h-10 w-10 rounded-full border-[3px] border-brand-200 border-t-brand-500 animate-spin" />
+          <p className="text-sm text-gray-400 font-medium">A carregar calendário...</p>
         </div>
       </div>
     );
@@ -180,242 +174,304 @@ const Calendar: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-softpink-100">
-        <div className="flex flex-col items-center gap-4">
-          <span className="text-brand-700 text-xl font-bold">Por favor, faça login para ver o calendário.</span>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p className="text-gray-500 font-medium">Por favor, faça login para ver o calendário.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-softpink-100 flex flex-col lg:flex-row items-start justify-center gap-4 lg:gap-8 p-4 lg:p-8">
+    <div className="animate-fade-in flex flex-col xl:flex-row gap-6">
       {/* Calendar grid */}
-      <div className="bg-white rounded-3xl shadow-glass p-4 lg:p-6 w-full max-w-7xl">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
-          <h1 className="text-2xl lg:text-3xl font-extrabold text-brand-700">Calendário</h1>
-          <div className="flex gap-2 items-center">
-            <button onClick={() => setSelectedDate(addDays(selectedDate, -30))} className="px-3 py-1 rounded bg-brand-100 text-brand-700 hover:bg-brand-200 transition">&lt;</button>
-            <span className="font-bold text-sm lg:text-lg whitespace-nowrap">{format(monthStart, 'MMMM yyyy', { locale: pt })}</span>
-            <button onClick={() => setSelectedDate(addDays(selectedDate, 30))} className="px-3 py-1 rounded bg-brand-100 text-brand-700 hover:bg-brand-200 transition">&gt;</button>
-          </div>
-        </div>
-        <div className="grid grid-cols-7 gap-1 lg:gap-4 mb-2">
-          {WEEK_DAYS.map((d, i) => (
-            <div key={i} className="text-center font-bold text-brand-700 text-xs lg:text-sm">{d}</div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7 gap-1 lg:gap-4">
-          {days.map((date, idx) => {
-            const dayEvents = getEventsForDay(date);
-            return (
-              <div
-                key={idx}
-                className={`rounded-xl min-h-[80px] lg:min-h-[160px] p-1 lg:p-3 cursor-pointer border transition-all flex flex-col gap-1 lg:gap-2 ${isSameMonth(date, monthStart) ? 'bg-softpink-50 hover:bg-softpink-100 border-brand-100' : 'bg-gray-50 text-gray-400 border-gray-100'} ${isSameDay(date, today) ? 'ring-2 ring-brand-500' : ''}`}
-                onClick={() => handleDayClick(date)}
+      <div className="flex-1 min-w-0">
+        <div className="rounded-xl border border-gray-100 shadow-card overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-brand-500 to-brand-400">
+            <h1 className="text-lg font-bold text-white">Calendário</h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedDate(addDays(selectedDate, -30))}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors"
               >
-                <div className="text-sm lg:text-base font-bold text-brand-700 mb-1 lg:mb-2 text-right">{format(date, 'd')}</div>
-                {dayEvents.map(ev => {
-                  const signUps = signUpsMap[ev.id] || [];
-                  const userIdNumbers = signUps.map(su => {
-                    const user = allUsers.find((u: any) => u.id === su.userId);
-                    return user ? user.idNumber : su.userId;
-                  });
-                  
-                  // Check if event is full
-                  const isFull = ev.maxCapacity > 0 && signUps.length >= ev.maxCapacity;
-                  
-                  // Color scheme for event type
-                  const eventColor =
-                    ev.type === 'Turno' ? 'bg-blue-100 text-blue-700' :
-                    ev.type === 'Teambuilding' ? 'bg-yellow-100 text-yellow-700' :
-                    ev.type === 'Evento Aberto' ? 'bg-pink-100 text-pink-700' :
-                    ev.type === 'Reunião Geral' ? 'bg-green-100 text-green-700' :
-                    'bg-purple-100 text-purple-700';
-                  
-                  // Status ball color
-                  const statusBall = ev.status === 'published' ? 'bg-green-500' : 'bg-yellow-400';
-                  
-                  // Apply faded effect for full events
-                  const fullEventClasses = isFull ? 'opacity-50 grayscale-[0.3]' : '';
-                  
-                  return (
-                    <div key={ev.id} className={`rounded-lg px-1 lg:px-2 py-0.5 lg:py-1 flex flex-col gap-0.5 lg:gap-1 ${eventColor} shadow-sm ${fullEventClasses} transition-all duration-300`}>
-                      <div className="flex items-center gap-1 lg:gap-2">
-                        <span className="text-sm lg:text-lg">
-                          {ev.type === 'Turno' ? '☎️' : ev.type === 'Teambuilding' ? '🎉' : ev.type === 'Evento Aberto' ? '📢' : ev.type === 'Reunião Geral' ? '👥' : '💻'}
-                        </span>
-                        <span className="font-semibold text-xs truncate max-w-[60px] lg:max-w-[90px]" title={ev.title}>{ev.title}</span>
-                        <span className={`ml-1 w-2 h-2 lg:w-3 lg:h-3 rounded-full inline-block border border-white shadow ${statusBall}`}></span>
-                      </div>
-                      
-                      {/* Supervisor and Sign-ups - Hidden on mobile to save space */}
-                      <div className="hidden lg:flex flex-col">
-                        {/* Supervisor Information */}
-                        <SupervisorInfo supervisor={ev.supervisor} users={allUsers} />
+                <ChevronLeft />
+              </button>
+              <span className="text-sm font-semibold text-white min-w-[140px] text-center capitalize">
+                {format(monthStart, 'MMMM yyyy', { locale: pt })}
+              </span>
+              <button
+                onClick={() => setSelectedDate(addDays(selectedDate, 30))}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <ChevronRight />
+              </button>
+            </div>
+          </div>
 
-                        {/* Sign-ups Information */}
-                        <div className="flex gap-1 flex-wrap mt-1">
-                          {signUps.length === 0 ? null :
-                            signUps.length <= 2
-                              ? userIdNumbers.map((idNum, idx) => (
-                                  <span key={idx} className="bg-white/80 text-brand-700 rounded px-1 text-xs font-mono border border-brand-100">{idNum}</span>
-                                ))
-                              : <span className="bg-white/80 text-brand-700 rounded px-1 text-xs font-mono border border-brand-100">{signUps.length} inscritos</span>
-                          }
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+          {/* Week day headers */}
+          <div className="grid grid-cols-7 bg-brand-50 border-b border-brand-100">
+            {WEEK_DAYS.map((d, i) => (
+              <div key={i} className="py-2.5 text-center text-xs font-semibold text-brand-600 uppercase tracking-wider">
+                {d}
               </div>
-            );
-          })}
-        </div>
-      </div>
-      {/* Right panel: User's week events */}
-      <div className="bg-white rounded-3xl shadow-glass p-4 lg:p-6 w-full lg:max-w-xs lg:min-w-[320px] order-first lg:order-last">
-        <h2 className="text-lg lg:text-xl font-extrabold text-brand-700 mb-4 flex items-center gap-2">Esta semana <span className="text-xl lg:text-2xl">📅</span></h2>
-        {userWeekEvents.length === 0 ? (
-          <div className="text-brand-400 text-base">Não tem eventos esta semana.</div>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {userWeekEvents.map(ev => {
-              const signUps = signUpsMap[ev.id] || [];
-              const userIdNumbers = signUps.slice(0, 2).map(su => {
-                const user = allUsers.find((u: any) => u.id === su.userId);
-                return user ? user.idNumber : su.userId;
-              });
-              
-              // Color scheme for event type
-              const eventColor =
-                ev.type === 'Turno' ? 'bg-blue-100 text-blue-700' :
-                ev.type === 'Teambuilding' ? 'bg-yellow-100 text-yellow-700' :
-                ev.type === 'Evento Aberto' ? 'bg-pink-100 text-pink-700' :
-                ev.type === 'Reunião Geral' ? 'bg-green-100 text-green-700' :
-                'bg-purple-100 text-purple-700';
-              
+            ))}
+          </div>
+
+          {/* Day cells */}
+          <div className="grid grid-cols-7">
+            {days.map((date, idx) => {
+              const dayEvents = getEventsForDay(date);
+              const isCurrentMonth = isSameMonth(date, monthStart);
+              const isToday = isSameDay(date, today);
+
               return (
-                <li key={ev.id} className={`rounded-xl border border-brand-100 px-4 py-3 flex flex-col gap-1 ${eventColor}`}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">
-                      {ev.type === 'Turno' ? '☎️' : ev.type === 'Teambuilding' ? '🎉' : ev.type === 'Evento Aberto' ? '📢' : ev.type === 'Reunião Geral' ? '👥' : '💻'}
-                    </span>
-                    <span className="font-bold text-base truncate max-w-[120px]">{ev.title}</span>
+                <div
+                  key={idx}
+                  className={`relative min-h-[80px] lg:min-h-[130px] p-1.5 lg:p-2 border-b border-r cursor-pointer transition-colors duration-150 ${
+                    isCurrentMonth
+                      ? isToday
+                        ? 'bg-brand-50/60 border-brand-100 hover:bg-brand-50'
+                        : 'bg-white border-gray-100 hover:bg-softpink-50'
+                      : 'bg-gray-50/50 border-gray-50'
+                  }`}
+                  onClick={() => handleDayClick(date)}
+                >
+                  {/* Day number */}
+                  <div className={`text-xs font-bold mb-1 ${
+                    isToday
+                      ? 'h-6 w-6 rounded-full bg-brand-500 text-white flex items-center justify-center'
+                      : isCurrentMonth
+                        ? 'text-brand-800 pl-0.5'
+                        : 'text-gray-300 pl-0.5'
+                  }`}>
+                    {format(date, 'd')}
                   </div>
-                  <div className="text-xs text-brand-400">{format(new Date(ev.startTime), 'EEEE, d MMMM', { locale: pt })} {format(new Date(ev.startTime), 'HH:mm')} - {format(new Date(ev.endTime), 'HH:mm')}</div>
-                  
-                  {/* Supervisor and Sign-ups */}
-                  <div className="flex flex-col mt-1">
-                    <SupervisorInfo supervisor={ev.supervisor} users={allUsers} />
-                    <div className="flex gap-1 flex-wrap mt-1">
-                      {userIdNumbers.map((idNum, idx) => (
-                        <span key={idx} className="bg-white/80 text-brand-700 rounded px-1 text-xs font-mono border border-brand-100">{idNum}</span>
-                      ))}
-                      {signUps.length > 2 && (
-                        <span className="bg-white/80 text-brand-700 rounded px-1 text-xs font-mono border border-brand-100">+{signUps.length - 2}</span>
-                      )}
-                    </div>
+
+                  {/* Event cards */}
+                  <div className="flex flex-col gap-0.5 lg:gap-1">
+                    {dayEvents.slice(0, 3).map(ev => {
+                      const style = getEventStyle(ev.type);
+                      const signUps = signUpsMap[ev.id] || [];
+                      const isFull = ev.maxCapacity > 0 && signUps.length >= ev.maxCapacity;
+                      const userIdNumbers = signUps.map(su => {
+                        const u = allUsers.find((usr: any) => usr.id === su.userId);
+                        return u ? u.idNumber : su.userId;
+                      });
+
+                      return (
+                        <div
+                          key={ev.id}
+                          className={`rounded-md px-1.5 py-0.5 lg:py-1 ${style.bg} ${style.text} transition-opacity ${isFull ? 'opacity-40' : ''}`}
+                        >
+                          <div className="flex items-center gap-1">
+                            <span className={`shrink-0 h-1.5 w-1.5 rounded-full ${style.dot}`} />
+                            <span className="truncate font-semibold text-[11px] hidden sm:inline">{ev.title}</span>
+                            <span className="sm:hidden text-[11px]">{style.icon}</span>
+                            <span className={`ml-auto shrink-0 h-1.5 w-1.5 rounded-full hidden sm:inline-block ${ev.status === 'published' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                          </div>
+                          {/* User ID previews */}
+                          {signUps.length > 0 && (
+                            <div className="flex gap-0.5 flex-wrap mt-0.5">
+                              {signUps.length <= 2
+                                ? userIdNumbers.map((idNum, i) => (
+                                    <span key={i} className="bg-white/70 text-[10px] font-mono rounded px-1 border border-black/5">{idNum}</span>
+                                  ))
+                                : <span className="bg-white/70 text-[10px] font-mono rounded px-1 border border-black/5">{signUps.length} inscritos</span>
+                              }
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {dayEvents.length > 3 && (
+                      <span className="text-[10px] text-brand-400 font-semibold pl-0.5">+{dayEvents.length - 3} mais</span>
+                    )}
                   </div>
-                </li>
+                </div>
               );
             })}
-          </ul>
-        )}
+          </div>
+        </div>
       </div>
+
+      {/* Right panel: This week */}
+      <div className="w-full xl:w-80 shrink-0 order-first xl:order-last">
+        <div className="rounded-xl border border-gray-100 shadow-card overflow-hidden">
+          <div className="px-5 py-4 bg-gradient-to-r from-brand-500 to-brand-400">
+            <h2 className="text-sm font-bold text-white">Os Meus eventos</h2>
+          </div>
+
+          <div className="p-4 bg-white">
+            {userUpcomingEvents.length === 0 ? (
+              <div className="flex flex-col items-center py-6 text-center">
+                <div className="h-10 w-10 rounded-full bg-brand-50 flex items-center justify-center mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-300" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="text-sm text-gray-400">Não tem eventos futuros.</p>
+              </div>
+            ) : (
+              <ul className="flex flex-col gap-2.5">
+                {userUpcomingEvents.map(ev => {
+                  const style = getEventStyle(ev.type);
+                  const signUps = signUpsMap[ev.id] || [];
+                  const userIdNumbers = signUps.slice(0, 2).map(su => {
+                    const u = allUsers.find((usr: any) => usr.id === su.userId);
+                    return u ? u.idNumber : su.userId;
+                  });
+
+                  return (
+                    <li key={ev.id} className={`rounded-lg border border-gray-100 border-l-[3px] ${style.border} ${style.bg} p-3 hover:shadow-soft transition-shadow`}>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-sm">{style.icon}</span>
+                        <span className={`font-semibold text-sm truncate ${style.text}`}>{ev.title}</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-2">
+                        {format(new Date(ev.startTime), 'EEEE, d MMM', { locale: pt })} · {format(new Date(ev.startTime), 'HH:mm')}–{format(new Date(ev.endTime), 'HH:mm')}
+                      </p>
+                      <SupervisorInfo supervisor={ev.supervisor} users={allUsers} />
+                      {userIdNumbers.length > 0 && (
+                        <div className="flex gap-1 flex-wrap mt-1.5">
+                          {userIdNumbers.map((idNum, idx) => (
+                            <span key={idx} className="bg-white/80 text-gray-600 rounded px-1.5 py-0.5 text-[11px] font-mono border border-gray-200">{idNum}</span>
+                          ))}
+                          {signUps.length > 2 && (
+                            <span className="bg-white/80 text-gray-400 rounded px-1.5 py-0.5 text-[11px] font-mono border border-gray-200">+{signUps.length - 2}</span>
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Modal for day events */}
       {modalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-[#D29674] w-full max-w-lg max-h-[90vh] overflow-y-auto flex flex-col items-center relative">
-            <button className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-700 z-10" onClick={() => setModalOpen(false)}>&times;</button>
-            <div className="p-6 lg:p-8 w-full">
-              <h2 className="text-lg lg:text-xl font-bold text-brand-700 mb-4 pr-8">Eventos em {format(selectedDate, 'd MMMM yyyy', { locale: pt })}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/25 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+
+          {/* Panel */}
+          <div className="relative bg-white rounded-xl shadow-2xl border border-gray-100 w-full max-w-lg max-h-[85vh] flex flex-col animate-scale-in">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+              <h2 className="text-sm font-bold text-gray-800">
+                {format(selectedDate, "d 'de' MMMM yyyy", { locale: pt })}
+              </h2>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="flex-1 overflow-y-auto p-5">
               {modalDayEvents.length === 0 ? (
-                <div className="text-brand-400">Nenhum evento neste dia.</div>
+                <div className="flex flex-col items-center py-8 text-center">
+                  <p className="text-sm text-gray-400">Nenhum evento neste dia.</p>
+                </div>
               ) : (
-                <ul className="w-full flex flex-col gap-4 max-h-[50vh] overflow-y-auto">
+                <ul className="flex flex-col gap-3">
                   {modalDayEvents.map(ev => {
+                    const style = getEventStyle(ev.type);
                     const signUps = signUpsMap[ev.id] || [];
                     const userIdNumbers = signUps.map(su => {
-                      const user = allUsers.find((u: any) => u.id === su.userId);
-                      return user ? user.idNumber : su.userId;
+                      const u = allUsers.find((usr: any) => usr.id === su.userId);
+                      return u ? u.idNumber : su.userId;
                     });
                     const isUserSignedUp = userIdNumbers.includes(user?.idNumber);
                     const isFull = ev.maxCapacity > 0 && signUps.length >= ev.maxCapacity;
-                    
-                    // Apply faded effect for full events
-                    const fullEventClasses = isFull ? 'opacity-50 grayscale-[0.3]' : '';
-                    
+
                     return (
-                      <li key={ev.id} className={`rounded-xl border p-3 lg:p-4 flex flex-col gap-2 ${ev.status === 'published' ? 'border-brand-200' : 'border-gray-200 bg-gray-50'} ${fullEventClasses} transition-all duration-300`}>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-lg lg:text-xl">
-                              {ev.type === 'Turno' ? '☎️' : ev.type === 'Teambuilding' ? '🎉' : ev.type === 'Evento Aberto' ? '📢' : ev.type === 'Reunião Geral' ? '👥' : '💻'}
+                      <li
+                        key={ev.id}
+                        className={`rounded-xl border border-l-[3px] p-4 transition-opacity duration-300 ${style.border} ${
+                          ev.status === 'published' ? `${style.bg} border-gray-100` : 'bg-gray-50/50 border-gray-200'
+                        } ${isFull && !isUserSignedUp ? 'opacity-50' : ''}`}
+                      >
+                        {/* Event header */}
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="flex items-center gap-2 flex-wrap min-w-0">
+                            <span className={`shrink-0 h-2.5 w-2.5 rounded-full ${style.dot}`} />
+                            <span className="font-semibold text-sm text-gray-800">{ev.title}</span>
+                            <span className="text-sm">{style.icon}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                              ev.status === 'published'
+                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                                : 'bg-amber-50 text-amber-600 border border-amber-200'
+                            }`}>
+                              {ev.status === 'published' ? 'Publicado' : 'Rascunho'}
                             </span>
-                            <span className="font-bold text-base lg:text-lg text-brand-700">{ev.title}</span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${ev.status === 'published' ? 'bg-success text-white' : 'bg-warning text-brand-900'}`}>{ev.status}</span>
                           </div>
-                          <span className="text-sm lg:text-base font-semibold text-brand-800">
-                            {ev.maxCapacity === 0 ? 'Ilimitado' : `${signUps.length} / ${ev.maxCapacity}`}
+                          <span className="shrink-0 text-xs font-semibold text-gray-500">
+                            {ev.maxCapacity === 0 ? '∞' : `${signUps.length}/${ev.maxCapacity}`}
                           </span>
                         </div>
-                        <div className="text-sm text-brand-500 font-mono">{format(new Date(ev.startTime), 'HH:mm')} - {format(new Date(ev.endTime), 'HH:mm')}</div>
-                        
-                        {/* Event Description */}
+
+                        {/* Time */}
+                        <p className="text-xs text-gray-400 font-mono mb-2">
+                          {format(new Date(ev.startTime), 'HH:mm')} – {format(new Date(ev.endTime), 'HH:mm')}
+                        </p>
+
+                        {/* Description */}
                         {ev.description && (
-                          <div className="mt-2 border-t border-brand-100 pt-2">
-                            <p className="text-sm text-brand-800 max-h-20 lg:max-h-24 overflow-y-auto">{ev.description}</p>
+                          <p className="text-xs text-gray-500 leading-relaxed mb-3 max-h-20 overflow-y-auto">{ev.description}</p>
+                        )}
+
+                        {/* Supervisor */}
+                        {ev.supervisor && (ev.supervisor.id || ev.supervisor.name) && (
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-xs font-medium text-gray-400">Supervisor:</span>
+                            <SupervisorInfo supervisor={ev.supervisor} users={allUsers} />
                           </div>
                         )}
-                        
-                        {/* Supervisor Information */}
-                        {ev.supervisor && (
-                          <div className="mt-2 border-t border-brand-100 pt-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-brand-700">Supervisor:</span>
-                              <SupervisorInfo supervisor={ev.supervisor} users={allUsers} />
-                            </div>
+
+                        {/* Sign-ups */}
+                        <div className="border-t border-gray-100 pt-3">
+                          <span className="text-xs font-medium text-gray-400 mb-1.5 block">Inscritos</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {userIdNumbers.length > 0 ? userIdNumbers.map((idNum, idx) => (
+                              <span key={idx} className="bg-gray-50 text-gray-600 rounded-md px-2 py-0.5 text-[11px] font-mono border border-gray-100">{idNum}</span>
+                            )) : (
+                              <span className="text-xs text-gray-300">Ninguém inscrito.</span>
+                            )}
                           </div>
-                        )}
-                        
-                        <div className="flex flex-col gap-2 mt-2">
-                          <div className="border-t border-brand-100 pt-2">
-                            <span className="text-sm font-semibold text-brand-700 mb-1 block">Inscritos:</span>
-                            <div className="flex flex-wrap gap-2">
-                              {userIdNumbers.length > 0 ? userIdNumbers.map((idNum, idx) => (
-                                <span key={idx} className="bg-brand-100 text-brand-700 rounded px-1.5 py-0.5 text-xs font-mono">{idNum}</span>
-                              )) : (
-                                <span className="text-sm text-brand-400">Ninguém inscrito.</span>
-                              )}
-                            </div>
-                          </div>
-                          {user && ev.status === 'published' && (
-                            isUserSignedUp ? (
-                              <button
-                                className="w-full px-4 py-2 rounded-lg bg-gray-200 text-brand-700 font-bold shadow hover:bg-gray-300 transition text-sm lg:text-base mt-2"
-                                onClick={() => handleCancelSignUp(ev)}
-                                disabled={signUpLoading === ev.id}
-                              >
-                                Cancelar inscrição
-                              </button>
-                            ) : (
-                              <button
-                                className="w-full px-4 py-2 rounded-lg bg-[#D29674] text-white font-bold shadow hover:bg-[#b97b54] transition text-sm lg:text-base mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                onClick={() => handleSignUp(ev)}
-                                disabled={signUpLoading === ev.id || isFull}
-                              >
-                                {signUpLoading === ev.id ? 'A inscrever...' : isFull ? 'Evento cheio' : 'Inscrever-se'}
-                              </button>
-                            )
-                          )}
                         </div>
+
+                        {/* Sign up / cancel button */}
+                        {user && ev.status === 'published' && (
+                          isUserSignedUp ? (
+                            <button
+                              className="w-full mt-3 px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                              onClick={() => handleCancelSignUp(ev)}
+                              disabled={signUpLoading === ev.id}
+                            >
+                              {signUpLoading === ev.id ? 'A processar...' : 'Cancelar inscrição'}
+                            </button>
+                          ) : (
+                            <button
+                              className="w-full mt-3 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => handleSignUp(ev)}
+                              disabled={signUpLoading === ev.id || isFull}
+                            >
+                              {signUpLoading === ev.id ? 'A inscrever...' : isFull ? 'Evento cheio' : 'Inscrever-se'}
+                            </button>
+                          )
+                        )}
                       </li>
                     );
                   })}
                 </ul>
               )}
-              {signUpError && <div className="text-danger text-sm mt-2 text-center">{signUpError}</div>}
+              {signUpError && <p className="text-danger-600 text-xs mt-3 text-center font-medium">{signUpError}</p>}
             </div>
           </div>
         </div>
@@ -424,4 +480,4 @@ const Calendar: React.FC = () => {
   );
 };
 
-export default Calendar; 
+export default Calendar;
