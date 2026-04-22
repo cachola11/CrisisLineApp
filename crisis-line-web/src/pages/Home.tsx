@@ -132,9 +132,9 @@ const Home: React.FC = () => {
           <div className="max-w-2xl">
             <div className="flex items-center gap-3 mb-4">
               <img
-                src={process.env.PUBLIC_URL + '/sos-logo.png'}
-                alt=""
-                className="h-12 sm:h-14 w-auto brightness-0 invert opacity-90"
+                src={process.env.PUBLIC_URL + '/sos-estudante-logo.png'}
+                alt="SOS estudante"
+                className="h-12 sm:h-14 w-auto"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}

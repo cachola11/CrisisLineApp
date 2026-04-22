@@ -4,6 +4,7 @@ import { pt } from 'date-fns/locale';
 import { useAuth } from '../context/AuthContext';
 import { getEventsForUser, getSignUpsForEvent, signUpUserToEvent, cancelSignUpForEvent, getAllEventSignUps } from '../services/eventService';
 import { getAllUsers } from '../services/userService';
+import { eventTypeAllowsSignUps } from '../constants/eventTypes';
 
 const WEEK_DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -13,6 +14,8 @@ const EVENT_STYLES: Record<string, { dot: string; bg: string; text: string; bord
   'Evento Aberto':      { dot: 'bg-pink-500',   bg: 'bg-pink-50',   text: 'text-pink-700',   border: 'border-l-pink-400',   icon: '📢' },
   'Reunião Geral':      { dot: 'bg-emerald-500',bg: 'bg-emerald-50',text: 'text-emerald-700', border: 'border-l-emerald-400',icon: '👥' },
   'Reunião Coordenação':{ dot: 'bg-violet-500', bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-l-violet-400', icon: '💻' },
+  'Interrupção Letiva': { dot: 'bg-slate-500',  bg: 'bg-slate-50',  text: 'text-slate-700',  border: 'border-l-slate-400',  icon: '📅' },
+  'Pausa Lectiva':      { dot: 'bg-slate-500',  bg: 'bg-slate-50',  text: 'text-slate-700',  border: 'border-l-slate-400',  icon: '📅' },
 };
 
 const getEventStyle = (type: string) => EVENT_STYLES[type] || { dot: 'bg-gray-500', bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-l-gray-400', icon: '📌' };
@@ -251,7 +254,8 @@ const Calendar: React.FC = () => {
                     {dayEvents.slice(0, 3).map(ev => {
                       const style = getEventStyle(ev.type);
                       const signUps = signUpsMap[ev.id] || [];
-                      const isFull = ev.maxCapacity > 0 && signUps.length >= ev.maxCapacity;
+                      const allowsSignUps = eventTypeAllowsSignUps(ev.type);
+                      const isFull = allowsSignUps && ev.maxCapacity > 0 && signUps.length >= ev.maxCapacity;
                       const userIdNumbers = signUps.map(su => {
                         const u = allUsers.find((usr: any) => usr.id === su.userId);
                         return u ? u.idNumber : su.userId;
@@ -269,7 +273,7 @@ const Calendar: React.FC = () => {
                             <span className={`ml-auto shrink-0 h-1.5 w-1.5 rounded-full hidden sm:inline-block ${ev.status === 'published' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
                           </div>
                           {/* User ID previews */}
-                          {signUps.length > 0 && (
+                          {allowsSignUps && signUps.length > 0 && (
                             <div className="flex gap-0.5 flex-wrap mt-0.5">
                               {signUps.length <= 2
                                 ? userIdNumbers.map((idNum, i) => (
@@ -315,6 +319,7 @@ const Calendar: React.FC = () => {
                 {userUpcomingEvents.map(ev => {
                   const style = getEventStyle(ev.type);
                   const signUps = signUpsMap[ev.id] || [];
+                  const allowsSignUps = eventTypeAllowsSignUps(ev.type);
                   const userIdNumbers = signUps.slice(0, 2).map(su => {
                     const u = allUsers.find((usr: any) => usr.id === su.userId);
                     return u ? u.idNumber : su.userId;
@@ -330,7 +335,7 @@ const Calendar: React.FC = () => {
                         {format(new Date(ev.startTime), 'EEEE, d MMM', { locale: pt })} · {format(new Date(ev.startTime), 'HH:mm')}–{format(new Date(ev.endTime), 'HH:mm')}
                       </p>
                       <SupervisorInfo supervisor={ev.supervisor} users={allUsers} />
-                      {userIdNumbers.length > 0 && (
+                      {allowsSignUps && userIdNumbers.length > 0 && (
                         <div className="flex gap-1 flex-wrap mt-1.5">
                           {userIdNumbers.map((idNum, idx) => (
                             <span key={idx} className="bg-white/80 text-gray-600 rounded px-1.5 py-0.5 text-[11px] font-mono border border-gray-200">{idNum}</span>
@@ -383,12 +388,13 @@ const Calendar: React.FC = () => {
                   {modalDayEvents.map(ev => {
                     const style = getEventStyle(ev.type);
                     const signUps = signUpsMap[ev.id] || [];
+                    const allowsSignUps = eventTypeAllowsSignUps(ev.type);
                     const userIdNumbers = signUps.map(su => {
                       const u = allUsers.find((usr: any) => usr.id === su.userId);
                       return u ? u.idNumber : su.userId;
                     });
-                    const isUserSignedUp = userIdNumbers.includes(user?.idNumber);
-                    const isFull = ev.maxCapacity > 0 && signUps.length >= ev.maxCapacity;
+                    const isUserSignedUp = allowsSignUps && userIdNumbers.includes(user?.idNumber);
+                    const isFull = allowsSignUps && ev.maxCapacity > 0 && signUps.length >= ev.maxCapacity;
 
                     return (
                       <li
@@ -412,7 +418,7 @@ const Calendar: React.FC = () => {
                             </span>
                           </div>
                           <span className="shrink-0 text-xs font-semibold text-gray-500">
-                            {ev.maxCapacity === 0 ? '∞' : `${signUps.length}/${ev.maxCapacity}`}
+                            {!allowsSignUps ? '—' : ev.maxCapacity === 0 ? '∞' : `${signUps.length}/${ev.maxCapacity}`}
                           </span>
                         </div>
 
@@ -435,19 +441,25 @@ const Calendar: React.FC = () => {
                         )}
 
                         {/* Sign-ups */}
-                        <div className="border-t border-gray-100 pt-3">
-                          <span className="text-xs font-medium text-gray-400 mb-1.5 block">Inscritos</span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {userIdNumbers.length > 0 ? userIdNumbers.map((idNum, idx) => (
-                              <span key={idx} className="bg-gray-50 text-gray-600 rounded-md px-2 py-0.5 text-[11px] font-mono border border-gray-100">{idNum}</span>
-                            )) : (
-                              <span className="text-xs text-gray-300">Ninguém inscrito.</span>
-                            )}
+                        {allowsSignUps ? (
+                          <div className="border-t border-gray-100 pt-3">
+                            <span className="text-xs font-medium text-gray-400 mb-1.5 block">Inscritos</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {userIdNumbers.length > 0 ? userIdNumbers.map((idNum, idx) => (
+                                <span key={idx} className="bg-gray-50 text-gray-600 rounded-md px-2 py-0.5 text-[11px] font-mono border border-gray-100">{idNum}</span>
+                              )) : (
+                                <span className="text-xs text-gray-300">Ninguém inscrito.</span>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="border-t border-gray-100 pt-3">
+                            <p className="text-xs text-gray-500">Este evento não aceita inscrições.</p>
+                          </div>
+                        )}
 
                         {/* Sign up / cancel button */}
-                        {user && ev.status === 'published' && (
+                        {allowsSignUps && user && ev.status === 'published' && (
                           isUserSignedUp ? (
                             <button
                               className="w-full mt-3 px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"

@@ -19,6 +19,13 @@ import {
 const eventsCollection = collection(db, 'events');
 const eventSignUpsCollection = collection(db, 'eventSignUps');
 
+/** Unify legacy event type label on read (Firestore may still store the old string). */
+const normalizeEventTypeFields = (ev) => {
+    const raw = ev.eventType || ev.type;
+    const type = raw === 'Pausa Lectiva' ? 'Interrupção Letiva' : raw;
+    return { ...ev, type, eventType: type };
+};
+
 /**
  * Helper function to convert Firestore Timestamps to Date objects.
  * This ensures date-fns receives valid Date objects.
@@ -94,7 +101,7 @@ export const getEvent = async (id) => {
         const docRef = doc(eventsCollection, id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            return { id: docSnap.id, ...convertTimestampsToDates(docSnap.data()) };
+            return normalizeEventTypeFields({ id: docSnap.id, ...convertTimestampsToDates(docSnap.data()) });
         } else {
             console.log("No such event document!");
             return null;
@@ -124,8 +131,9 @@ export const getAllEvents = async () => {
             return timeA - timeB;
         });
         
-        console.log("getAllEvents: Fetched events:", events);
-        return events;
+        const withTypes = events.map(normalizeEventTypeFields);
+        console.log("getAllEvents: Fetched events:", withTypes);
+        return withTypes;
     } catch (error) {
         console.error("Error fetching all events:", error);
         throw new Error(`Failed to fetch events: ${error.message}`);
@@ -382,13 +390,13 @@ export const getEventsForUser = async (userRole) => {
     switch (userRole) {
         case 'Visitante':
             // Visitante: allow read: if resource.data.eventType in ['Evento Aberto', 'Reunião Geral'] && resource.data.status == 'published'; [cite: 264]
-            conditions.push(where('eventType', 'in', ['Evento Aberto', 'Reunião Geral']));
+            conditions.push(where('eventType', 'in', ['Evento Aberto', 'Reunião Geral', 'Interrupção Letiva', 'Pausa Lectiva']));
             conditions.push(where('status', '==', 'published'));
             break;
         case 'Voluntário':
             // Voluntário: allow read: if resource.data.status in ['draft', 'published'] && resource.data.eventType in ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Geral']; [cite: 265]
             conditions.push(where('status', 'in', ['draft', 'published']));
-            conditions.push(where('eventType', 'in', ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Geral']));
+            conditions.push(where('eventType', 'in', ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Geral', 'Interrupção Letiva', 'Pausa Lectiva']));
             break;
         case 'Coordenador':
         case 'Administrador':
@@ -412,8 +420,7 @@ export const getEventsForUser = async (userRole) => {
             ...convertTimestampsToDates(doc.data())
         }));
         
-        // Normalize event type from `eventType` to `type` for backwards compatibility
-        const normalizedEvents = events.map(ev => ({ ...ev, type: ev.eventType || ev.type }));
+        const normalizedEvents = events.map(normalizeEventTypeFields);
         
         console.log(`Fetched ${normalizedEvents.length} events for role: ${userRole}`);
         return normalizedEvents;
@@ -439,6 +446,10 @@ export const signUpUserToEvent = async (eventId, userId, forced = false) => {
     }
 
     const eventData = eventSnap.data();
+    const eventType = eventData.eventType || eventData.type;
+    if (eventType === 'Interrupção Letiva' || eventType === 'Pausa Lectiva') {
+        throw new Error('Este tipo de evento não aceita inscrições.');
+    }
     const signUpsQuery = query(eventSignUpsCollection, where('eventId', '==', eventId));
     const signUpsSnap = await getDocs(signUpsQuery);
     const signUps = signUpsSnap.docs.map(doc => doc.data());

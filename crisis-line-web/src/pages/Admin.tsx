@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import CreateUser from '../components/CreateUser';
 import { translations } from '../utils/translations';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
@@ -25,6 +25,30 @@ const Admin: React.FC = () => {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [deleteModalUser, setDeleteModalUser] = useState<any | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+
+  const filteredUsers = useMemo(() => {
+    const q = userSearch.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) => {
+      const idStr = String(u.idNumber ?? '').toLowerCase();
+      const nameStr = String(u.name ?? '').toLowerCase();
+      const roleKey = String(u.role ?? '').toLowerCase();
+      const roleLabel = String(
+        u.role && u.role in translations.auth.roles
+          ? translations.auth.roles[u.role as keyof typeof translations.auth.roles]
+          : ''
+      ).toLowerCase();
+      const onlineStr = u.online ? 'online' : 'offline';
+      return (
+        idStr.includes(q) ||
+        nameStr.includes(q) ||
+        roleKey.includes(q) ||
+        roleLabel.includes(q) ||
+        onlineStr.includes(q)
+      );
+    });
+  }, [users, userSearch]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -165,8 +189,25 @@ const Admin: React.FC = () => {
         </div>
 
           <div className="bg-white">
-            <div className="px-5 py-3 border-b border-gray-100">
+            <div className="px-5 py-3 border-b border-gray-100 space-y-3">
               <p className="text-sm text-gray-500">{translations.pages.admin.description}</p>
+              <div className="max-w-md">
+                <label
+                  htmlFor="admin-user-search"
+                  className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5"
+                >
+                  {translations.common.search}
+                </label>
+                <input
+                  id="admin-user-search"
+                  type="search"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="Id, nome, função, online…"
+                  autoComplete="off"
+                  className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-300 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:bg-white outline-none transition-all"
+                />
+              </div>
             </div>
 
             {loading ? (
@@ -196,7 +237,16 @@ const Admin: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {users.map(u => (
+                    {filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-12 text-center text-sm text-gray-500">
+                          {userSearch.trim()
+                            ? 'Nenhum utilizador corresponde à pesquisa.'
+                            : 'Sem utilizadores.'}
+                        </td>
+                      </tr>
+                    ) : (
+                    filteredUsers.map(u => (
                       <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
                         <td className="px-4 py-3">
                           <span className="text-sm font-semibold text-gray-800 font-mono">{u.idNumber}</span>
@@ -252,7 +302,8 @@ const Admin: React.FC = () => {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -260,7 +311,17 @@ const Admin: React.FC = () => {
 
             {!loading && !error && (
               <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
-                {users.length} utilizador{users.length === 1 ? '' : 'es'}
+                {userSearch.trim() ? (
+                  <>
+                    <span className="font-semibold text-gray-600">{filteredUsers.length}</span> de{' '}
+                    <span className="font-semibold text-gray-600">{users.length}</span> utilizador
+                    {users.length === 1 ? '' : 'es'}
+                  </>
+                ) : (
+                  <>
+                    {users.length} utilizador{users.length === 1 ? '' : 'es'}
+                  </>
+                )}
               </div>
             )}
           </div>

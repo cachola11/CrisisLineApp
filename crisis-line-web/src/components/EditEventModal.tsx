@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { EVENT_TYPES, eventTypeAllowsSignUps } from '../constants/eventTypes';
 
 interface EditEventModalProps {
   isOpen: boolean;
@@ -6,8 +7,6 @@ interface EditEventModalProps {
   event: any | null;
   onUpdate: (eventId: string, updatedData: any) => Promise<void>;
 }
-
-const EVENT_TYPES = ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Coordenação', 'Reunião Geral'];
 
 const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event, onUpdate }) => {
   const [form, setForm] = useState({
@@ -24,13 +23,15 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event,
 
   useEffect(() => {
     if (event) {
+      const rawType = event.type || event.eventType || '';
+      const normalizedType = rawType === 'Pausa Lectiva' ? 'Interrupção Letiva' : rawType;
       setForm({
         title: event.title || '',
         description: event.description || '',
-        type: event.type || '',
+        type: normalizedType,
         startTime: event.startTime ? new Date(event.startTime).toISOString().slice(0, 16) : '',
         endTime: event.endTime ? new Date(event.endTime).toISOString().slice(0, 16) : '',
-        maxCapacity: event.maxCapacity ? String(event.maxCapacity) : '',
+        maxCapacity: event.maxCapacity !== undefined && event.maxCapacity !== null ? String(event.maxCapacity) : '',
       });
       setError(null);
       setSuccess(false);
@@ -38,7 +39,16 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event,
   }, [event]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'type') {
+      setForm((f) => ({
+        ...f,
+        type: value,
+        maxCapacity: !eventTypeAllowsSignUps(value) ? '0' : !eventTypeAllowsSignUps(f.type) && f.maxCapacity === '0' ? '1' : f.maxCapacity,
+      }));
+      return;
+    }
+    setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,7 +56,13 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event,
     setError(null);
     setLoading(true);
     try {
-      if (!form.title || !form.type || !form.startTime || !form.endTime || form.maxCapacity === '' || form.maxCapacity === null || form.maxCapacity === undefined) {
+      const allowsSignUps = eventTypeAllowsSignUps(form.type);
+      if (!form.title || !form.type || !form.startTime || !form.endTime) {
+        setError('Preencha todos os campos obrigatórios.');
+        setLoading(false);
+        return;
+      }
+      if (allowsSignUps && (form.maxCapacity === '' || form.maxCapacity === null || form.maxCapacity === undefined)) {
         setError('Preencha todos os campos obrigatórios.');
         setLoading(false);
         return;
@@ -58,7 +74,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event,
         eventType: form.type,
         startTime: new Date(form.startTime),
         endTime: new Date(form.endTime),
-        maxCapacity: Number(form.maxCapacity),
+        maxCapacity: allowsSignUps ? Number(form.maxCapacity) : 0,
       });
       setSuccess(true);
       setTimeout(() => {
@@ -136,21 +152,27 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event,
               />
             </div>
           </div>
-          <div>
-            <label className="block mb-2 text-sm lg:text-lg font-semibold text-brand-700">Capacidade Máxima</label>
-            <input
-              type="number"
-              name="maxCapacity"
-              className="mt-1 border rounded-xl px-4 py-3 w-full text-sm lg:text-base focus:border-[#D29674] focus:ring-2 focus:ring-[#D29674]/20 bg-white text-brand-700"
-              value={form.maxCapacity}
-              onChange={handleChange}
-              min={0}
-              placeholder="0 = Ilimitado"
-            />
-            {form.maxCapacity === '0' && (
-              <div className="text-brand-500 text-sm mt-1">Ilimitado</div>
-            )}
-          </div>
+          {eventTypeAllowsSignUps(form.type) ? (
+            <div>
+              <label className="block mb-2 text-sm lg:text-lg font-semibold text-brand-700">Capacidade Máxima</label>
+              <input
+                type="number"
+                name="maxCapacity"
+                className="mt-1 border rounded-xl px-4 py-3 w-full text-sm lg:text-base focus:border-[#D29674] focus:ring-2 focus:ring-[#D29674]/20 bg-white text-brand-700"
+                value={form.maxCapacity}
+                onChange={handleChange}
+                min={0}
+                placeholder="0 = Ilimitado"
+              />
+              {form.maxCapacity === '0' && (
+                <div className="text-brand-500 text-sm mt-1">Ilimitado</div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-brand-600 rounded-xl border border-brand-100 bg-softpink-50/60 px-4 py-3">
+              Este tipo de evento não tem inscrições.
+            </p>
+          )}
           <div className="flex flex-col sm:flex-row justify-end gap-2 mt-6">
             <button
               type="button"

@@ -85,6 +85,8 @@ export const translations = {
     'Teambuilding': '🎉 Teambuilding',
     'Evento Aberto': '📢 Evento Aberto',
     'Reunião Coordenação': '💻 Reunião Coordenação',
-    'Reunião Geral': '👥 Reunião Geral'
+    'Reunião Geral': '👥 Reunião Geral',
+    'Interrupção Letiva': '📅 Interrupção Letiva',
+    'Pausa Lectiva': '📅 Pausa Lectiva'
   }
 }; 

@@ -163,7 +163,7 @@ export const getAllAttendanceRecords = async () => {
  * Marks attendance for a user on a specific date.
  * @param {string} userId The user ID.
  * @param {string} date The date in YYYY-MM-DD format.
- * @param {string} status 'present' or 'absent'.
+ * @param {string} status 'present', 'absent', or 'neutral'.
  * @param {string} markedBy The ID of the user marking the attendance.
  * @returns {string} The ID of the attendance record.
  */

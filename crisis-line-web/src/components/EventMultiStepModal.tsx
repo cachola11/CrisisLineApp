@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import WeekIntervalInput from './WeekIntervalInput';
+import { EVENT_TYPES, EVENT_TYPE_EMOJIS, eventTypeAllowsSignUps } from '../constants/eventTypes';
 
 interface EventMultiStepModalProps {
   isOpen: boolean;
@@ -7,7 +8,6 @@ interface EventMultiStepModalProps {
   onCreate: (eventData: any) => Promise<void>;
 }
 
-const EVENT_TYPES = ['Turno', 'Teambuilding', 'Evento Aberto', 'Reunião Coordenação', 'Reunião Geral'];
 const RECURRENCE_OPTIONS = [
   { value: 'weekdays', label: 'Dias de semana' },
   { value: 'weekends', label: 'Fins de semana' },
@@ -23,15 +23,6 @@ const steps = [
   'Resumo',
 ];
 
-// Emoji for event types
-const EVENT_TYPE_EMOJIS: Record<string, string> = {
-  'Turno': '☎️',
-  'Teambuilding': '🎉',
-  'Evento Aberto': '📢',
-  'Reunião Coordenação': '💻',
-  'Reunião Geral': '👥',
-};
-
 const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClose, onCreate }) => {
   const [step, setStep] = useState(0);
   const [isRecurring, setIsRecurring] = useState(false);
@@ -46,6 +37,8 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const skipsCapacityStep = !eventTypeAllowsSignUps(formData.type);
 
   // Step validation
   const validateStep = () => {
@@ -70,6 +63,10 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
       }
     }
     if (step === 3) {
+      if (skipsCapacityStep) {
+        setError(null);
+        return true;
+      }
       if (formData.maxCapacity === undefined || formData.maxCapacity === null || isNaN(formData.maxCapacity) || formData.maxCapacity < 0) {
         setError('Capacidade máxima deve ser um número maior ou igual a 0 (0 = ilimitado).');
         return false;
@@ -134,7 +131,15 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
             </div>
             <div>
               <label className="block mb-1 font-semibold text-brand-700 text-sm lg:text-base">Tipo</label>
-              <select className="border rounded-full px-4 py-2 w-full bg-white/80 border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-brand-700 text-sm lg:text-base" value={formData.type || ''} onChange={e => setFormData({ ...formData, type: e.target.value })} required>
+              <select className="border rounded-full px-4 py-2 w-full bg-white/80 border-brand-200 focus:border-brand-500 focus:ring-brand-500 text-brand-700 text-sm lg:text-base" value={formData.type || ''} onChange={e => {
+                const type = e.target.value;
+                setFormData((prev) => {
+                  const next = { ...prev, type };
+                  if (!eventTypeAllowsSignUps(type)) next.maxCapacity = 0;
+                  else if (!eventTypeAllowsSignUps(prev.type)) next.maxCapacity = prev.maxCapacity === 0 ? 1 : prev.maxCapacity;
+                  return next;
+                });
+              }} required>
                 <option value="">Selecione o tipo</option>
                 {EVENT_TYPES.map(type => <option key={type} value={type}>{EVENT_TYPE_EMOJIS[type]} {type}</option>)}
               </select>
@@ -254,7 +259,7 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
                   <div className="flex justify-between py-1 border-b border-brand-100"><span className="font-semibold text-brand-700">Fim:</span><span className="text-right text-brand-900">{new Date(formData.endTime).toLocaleString('pt-PT')}</span></div>
                 </>
               )}
-              <div className="flex justify-between py-1 border-b border-brand-100"><span className="font-semibold text-brand-700">Capacidade Máxima:</span><span className="text-right text-brand-900">{formData.maxCapacity === 0 ? 'Ilimitada' : formData.maxCapacity}</span></div>
+              <div className="flex justify-between py-1 border-b border-brand-100"><span className="font-semibold text-brand-700">Capacidade Máxima:</span><span className="text-right text-brand-900">{skipsCapacityStep ? 'Sem inscrições' : formData.maxCapacity === 0 ? 'Ilimitada' : formData.maxCapacity}</span></div>
               {isRecurring && (
                 <div>
                   <div className="font-semibold text-brand-700 pt-1">Restrições:</div>
@@ -278,16 +283,25 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
   };
 
   const handleNext = () => {
-    if (validateStep()) {
-      const nextStep = (step === 3 && !isRecurring) ? step + 2 : step + 1;
-      if (nextStep < steps.length) {
-        setStep(nextStep);
-      }
+    if (!validateStep()) return;
+    let nextStep = step + 1;
+    if (step === 2 && skipsCapacityStep) {
+      nextStep = isRecurring ? 4 : 5;
+    } else if (step === 3 && !isRecurring) {
+      nextStep = step + 2;
+    }
+    if (nextStep < steps.length) {
+      setStep(nextStep);
     }
   };
 
   const handlePrev = () => {
-    const prevStep = (step === 5 && !isRecurring) ? step - 2 : step - 1;
+    let prevStep = step - 1;
+    if (step === 5 && !isRecurring) {
+      prevStep = skipsCapacityStep ? 2 : 3;
+    } else if (step === 4 && isRecurring && skipsCapacityStep) {
+      prevStep = 2;
+    }
     if (prevStep >= 0) {
       setStep(prevStep);
     }
@@ -300,6 +314,7 @@ const EventMultiStepModal: React.FC<EventMultiStepModalProps> = ({ isOpen, onClo
     try {
       await onCreate({
         ...formData,
+        maxCapacity: !eventTypeAllowsSignUps(formData.type) ? 0 : formData.maxCapacity,
         isRecurring,
         recurrence,
         recurrenceStart: recurrenceInterval.start,

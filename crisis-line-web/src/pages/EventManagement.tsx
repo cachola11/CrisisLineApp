@@ -11,6 +11,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import ConfirmationModal from '../components/ConfirmationModal';
 import AssignSupervisorModal from '../components/AssignSupervisorModal';
+import ManageEventSignUpsModal from '../components/ManageEventSignUpsModal';
+import { eventTypeAllowsSignUps } from '../constants/eventTypes';
 
 const EVENT_STYLES: Record<string, { icon: string; dot: string; bg: string; text: string }> = {
   'Turno':              { icon: '☎️', dot: 'bg-blue-500',    bg: 'bg-blue-50',    text: 'text-blue-700' },
@@ -18,6 +20,8 @@ const EVENT_STYLES: Record<string, { icon: string; dot: string; bg: string; text
   'Evento Aberto':      { icon: '📢', dot: 'bg-pink-500',    bg: 'bg-pink-50',    text: 'text-pink-700' },
   'Reunião Coordenação':{ icon: '💻', dot: 'bg-violet-500',  bg: 'bg-violet-50',  text: 'text-violet-700' },
   'Reunião Geral':      { icon: '👥', dot: 'bg-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+  'Interrupção Letiva': { icon: '📅', dot: 'bg-slate-500',   bg: 'bg-slate-50',   text: 'text-slate-700' },
+  'Pausa Lectiva':      { icon: '📅', dot: 'bg-slate-500',   bg: 'bg-slate-50',   text: 'text-slate-700' },
 };
 
 const getStyle = (type: string) => EVENT_STYLES[type] || { icon: '📌', dot: 'bg-gray-500', bg: 'bg-gray-50', text: 'text-gray-700' };
@@ -41,6 +45,8 @@ const EventManagement: React.FC = () => {
   const [forceSignUpIdNumber, setForceSignUpIdNumber] = useState('');
   const [forceSignUpEvent, setForceSignUpEvent] = useState<any | null>(null);
   const [forceSignUpSuccess, setForceSignUpSuccess] = useState<string | null>(null);
+  const [manageInscritosOpen, setManageInscritosOpen] = useState(false);
+  const [manageInscritosEvent, setManageInscritosEvent] = useState<any | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [confirmation, setConfirmation] = useState({
@@ -57,8 +63,7 @@ const EventManagement: React.FC = () => {
     setLoadingEvents(true);
     try {
       const [all, users] = await Promise.all([getAllEvents(), getAllUsers()]);
-      const normalized = all.map((ev: any) => ({ ...ev, type: ev.type || ev.eventType }));
-      setEvents(normalized);
+      setEvents(all);
       setAllUsers(users);
     } catch (err) {
       console.error("Failed to fetch events:", err);
@@ -82,6 +87,10 @@ const EventManagement: React.FC = () => {
     };
     if (events.length > 0) fetchSignUps();
   }, [events, user]);
+
+  const handleSignUpCountSync = useCallback((eventId: string, count: number) => {
+    setSignUpCounts((prev) => ({ ...prev, [eventId]: count }));
+  }, []);
 
   if (loading) {
     return (
@@ -136,6 +145,7 @@ const EventManagement: React.FC = () => {
   };
 
   const handleCreateEvent = async (data: any) => {
+    const maxCapacity = !eventTypeAllowsSignUps(data.type) ? 0 : data.maxCapacity;
     if (data.isRecurring) {
       const getRecurrenceDates = (start: Date, end: Date) => {
         const dates: Date[] = [];
@@ -161,10 +171,10 @@ const EventManagement: React.FC = () => {
       for (const date of dates) {
         const start = new Date(date); const [sh, sm] = data.startTime.split(':'); start.setHours(Number(sh), Number(sm));
         const end = new Date(date); const [eh, em] = data.endTime.split(':'); end.setHours(Number(eh), Number(em));
-        await createEvent({ title: data.title, description: data.description, type: data.type, eventType: data.type, coordinatorUid: user.uid, startTime: start, endTime: end, maxCapacity: data.maxCapacity, status: 'draft' });
+        await createEvent({ title: data.title, description: data.description, type: data.type, eventType: data.type, coordinatorUid: user.uid, startTime: start, endTime: end, maxCapacity, status: 'draft' });
       }
     } else {
-      await createEvent({ title: data.title, description: data.description, type: data.type, eventType: data.type, coordinatorUid: user.uid, startTime: new Date(data.startTime), endTime: new Date(data.endTime), maxCapacity: data.maxCapacity, status: 'draft' });
+      await createEvent({ title: data.title, description: data.description, type: data.type, eventType: data.type, coordinatorUid: user.uid, startTime: new Date(data.startTime), endTime: new Date(data.endTime), maxCapacity, status: 'draft' });
     }
     await refreshEvents(); setShowEventModal(false);
   };
@@ -268,6 +278,7 @@ const EventManagement: React.FC = () => {
                 <option value="Evento Aberto">📢 Evento Aberto</option>
                 <option value="Reunião Coordenação">💻 Reunião</option>
                 <option value="Reunião Geral">👥 Reunião Geral</option>
+                <option value="Interrupção Letiva">📅 Interrupção Letiva</option>
               </select>
             </div>
             <div>
@@ -436,7 +447,9 @@ const EventManagement: React.FC = () => {
                         {ev.endTime ? formatDate(new Date(ev.endTime), 'dd/MM/yy HH:mm') : '—'}
                       </td>
                       <td className="px-4 py-3">
-                        {typeof signUpCounts[ev.id] === 'undefined' ? (
+                        {!eventTypeAllowsSignUps(ev.type) ? (
+                          <span className="text-xs text-gray-400">—</span>
+                        ) : typeof signUpCounts[ev.id] === 'undefined' ? (
                           <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
                             <span className="h-3 w-3 rounded-full border-2 border-gray-200 border-t-gray-400 animate-spin" />
                           </span>
@@ -479,12 +492,29 @@ const EventManagement: React.FC = () => {
                               </svg>
                             </button>
                           )}
-                          <button onClick={() => { setForceSignUpModalOpen(true); setForceSignUpEvent(ev); }} title="Forçar inscrição"
-                            className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-violet-600 hover:bg-violet-50 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
-                            </svg>
-                          </button>
+                          {eventTypeAllowsSignUps(ev.type) && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setManageInscritosEvent(ev);
+                                  setManageInscritosOpen(true);
+                                }}
+                                title="Gerir inscrições"
+                                className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-cyan-700 hover:bg-cyan-50 transition-colors"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                  <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                              <button onClick={() => { setForceSignUpModalOpen(true); setForceSignUpEvent(ev); }} title="Forçar inscrição"
+                                className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-violet-600 hover:bg-violet-50 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                                </svg>
+                              </button>
+                            </>
+                          )}
                           <button onClick={() => handleDelete(ev.id)} title="Eliminar"
                             className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -518,6 +548,17 @@ const EventManagement: React.FC = () => {
           setActionLoading(true); await batchAssignSupervisor(selectedEvents, supervisorId, supervisorName, supervisorEmoji);
           await refreshEvents(); setSelectedEvents([]); setAssignSupervisorModalOpen(false); setActionLoading(false);
         }}
+      />
+
+      <ManageEventSignUpsModal
+        isOpen={manageInscritosOpen}
+        onClose={() => {
+          setManageInscritosOpen(false);
+          setManageInscritosEvent(null);
+        }}
+        event={manageInscritosEvent}
+        allUsers={allUsers}
+        onCountsChange={handleSignUpCountSync}
       />
 
       {/* Force sign-up modal */}
